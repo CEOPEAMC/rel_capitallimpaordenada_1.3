@@ -16,8 +16,8 @@
   --salvo:#059669;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;overflow-x:hidden;}
-body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:var(--cinza-escuro);}
+html{width:100%;overflow-x:hidden;overscroll-behavior-y:contain;}
+body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:var(--cinza-escuro);overflow-x:hidden;}
 
 /* HEADER */
 .header{background:var(--laranja);position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(232,82,10,0.4);}
@@ -177,6 +177,7 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .counter-box.yellow input{color:#B45309;}.counter-box.red input{color:var(--vermelho);}
 .counter-box.green input{color:var(--verde-escuro);}
 .counter-box .clbl{font-size:clamp(7px,1.8vw,10px);font-weight:600;text-transform:uppercase;color:var(--cinza);margin-top:2px;line-height:1.2;}
+
 .counter-box .cnt-manual-tag{font-size:8px;color:#aaa;font-style:italic;margin-top:2px;cursor:pointer;text-decoration:underline dotted;}
 .counter-box .cnt-manual-tag:hover{color:var(--laranja);}
 .counter-box .cnt-auto-hint{font-size:8px;color:var(--verde-escuro);margin-top:1px;opacity:0.7;}
@@ -375,9 +376,9 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
     <div class="card">
       <div class="card-title">🚨 Totalizadores</div>
       <div class="counter-grid">
-        <div class="counter-box orange"><input type="number" id="cnt-aut" min="0" value="0" oninput="updateSummary()"><div class="clbl">Autuações</div><div class="cnt-auto-hint">● auto</div></div>
-        <div class="counter-box blue"><input type="number" id="cnt-nva" min="0" value="0" oninput="updateSummary()"><div class="clbl">NVA</div><div class="cnt-auto-hint">● auto</div></div>
-        <div class="counter-box yellow"><input type="number" id="cnt-suv" min="0" value="0" oninput="updateSummary()"><div class="clbl">SUV</div><div class="cnt-auto-hint">● auto</div></div>
+        <div class="counter-box orange"><input type="number" id="cnt-aut" min="0" value="0" oninput="updateSummary()"><div class="clbl">Autuações</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
+        <div class="counter-box blue"><input type="number" id="cnt-nva" min="0" value="0" oninput="updateSummary()"><div class="clbl">NVA</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
+        <div class="counter-box yellow"><input type="number" id="cnt-suv" min="0" value="0" oninput="updateSummary()"><div class="clbl">SUV</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
         <div class="counter-box red"><input type="number" id="cnt-rem" min="0" value="0" oninput="updateSummary()"><div class="clbl">Remoções</div></div>
         <div class="counter-box green"><input type="number" id="cnt-ori" min="0" value="0" oninput="updateSummary()"><div class="clbl">Orientações</div></div>
       </div>
@@ -507,6 +508,19 @@ window.addEventListener('load',()=>{
   document.getElementById('data-oc').value=n.toISOString().slice(0,10);
   document.getElementById('hora-ini').value=pad(n.getHours())+':'+pad(n.getMinutes());
   checkAutoSave();
+
+// ── BLOQUEIO PULL-TO-REFRESH (mobile) ──
+// Impede o gesto de arrastar para baixo recarregar a página,
+// mas preserva o scroll vertical normal
+let _ptStartY=0;
+document.addEventListener('touchstart',e=>{_ptStartY=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchmove',e=>{
+  const dy=e.touches[0].clientY-_ptStartY;
+  // Só bloqueia se estiver no topo da página E arrastando para baixo
+  if(dy>0&&(window.scrollY||document.documentElement.scrollTop)===0){
+    e.preventDefault();
+  }
+},{passive:false});
 });
 
 // ── TABS ──
@@ -748,7 +762,7 @@ function buildFields(tipo,iid){
       ${sf('tipo',iid,'Tipo de problema',['Sarjeta obstruída','Drenagem comprometida','Meio-fio danificado','Guia rebaixada irregular','Calçada danificada','Outros'],1,true)}
       ${tf('local',iid,'Local exato','Endereço ou referência',2)}
       ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à SEINF','Comunicado à SCSP','Comunicado à '+C,'Aguardando'],1,false)}
-      ${ta('obs',iid,'Descreva...',3)}</div>`;
+      ${ta('obs',iid,'Observações','Descreva...',3)}</div>`;
     case'iluminacao':return`<div class="fg fg-3">
       ${sf('tipo',iid,'Problema',['Poste apagado','Luminária danificada','Cabo caído','Vários postes no trecho','Poste inclinado','Outros'],1,true)}
       ${tf('local',iid,'Local / N° do poste','Endereço e n° do poste',2)}
@@ -802,7 +816,8 @@ function getItemDetails(item){
   }).filter(Boolean);
 }
 
-// Mapa de tipo de registro → qual contador atualizar automaticamente
+// ── CONTAGEM AUTOMÁTICA ──
+// Mapeia tipo de registro → qual contador atualizar automaticamente
 const tipoContador={
   infracao:'cnt-aut',
   suv:'cnt-suv',
@@ -810,37 +825,35 @@ const tipoContador={
 };
 // Marca quando usuário editou manualmente um contador
 const contadorManual={};
-['cnt-aut','cnt-nva','cnt-suv','cnt-rem','cnt-ori'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',function(){
-    contadorManual[id]=true;
-    // Mostra indicador "editado manualmente"
-    const box=this.closest('.counter-box');
-    if(box&&!box.querySelector('.cnt-manual-tag')){
-    const tag=document.createElement('div');
-      tag.className='cnt-manual-tag';tag.textContent='✎ manual – toque para auto';
-      tag.onclick=()=>{resetContadorManual(id);recalcContadores();};
-      box.appendChild(tag);
-    }
+document.addEventListener('DOMContentLoaded',()=>{
+  ['cnt-aut','cnt-nva','cnt-suv','cnt-rem','cnt-ori'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('input',function(){
+      contadorManual[id]=true;
+      const box=this.closest('.counter-box');
+      if(box&&!box.querySelector('.cnt-manual-tag')){
+        const tag=document.createElement('div');
+        tag.className='cnt-manual-tag';tag.textContent='\u270e manual – toque para auto';
+        tag.onclick=()=>{resetContadorManual(id);recalcContadores();};
+        box.appendChild(tag);
+      }
+    });
   });
 });
 
 function recalcContadores(){
-  // Para cada tipo com contador automático, conta os registros e atualiza SE não foi editado manualmente
   const contagens={};
   items.forEach(item=>{
     const cid=tipoContador[item.tipo];
     if(cid)contagens[cid]=(contagens[cid]||0)+1;
   });
   Object.entries(contagens).forEach(([cid,val])=>{
-    if(!contadorManual[cid]){
-      document.getElementById(cid).value=val;
-    }
+    if(!contadorManual[cid])document.getElementById(cid).value=val;
   });
-  // Se zerou registros de um tipo, zera o contador também (se não manual)
+  // Zera contador se nao ha mais registros daquele tipo (e nao foi editado manualmente)
   Object.values(tipoContador).forEach(cid=>{
-    if(!contagens[cid]&&!contadorManual[cid]){
-      document.getElementById(cid).value=0;
-    }
+    if(!contagens[cid]&&!contadorManual[cid])document.getElementById(cid).value=0;
   });
 }
 
@@ -849,6 +862,9 @@ function resetContadorManual(cid){
   const inp=document.getElementById(cid);
   if(inp){const box=inp.closest('.counter-box');const tag=box&&box.querySelector('.cnt-manual-tag');if(tag)tag.remove();}
 }
+
+// Alias para compatibilidade com chamadas existentes
+function autoUpdateCounters(){recalcContadores();}
 
 function addItem(tipo){
   const meta=itemLabels[tipo];if(!meta)return;
@@ -871,7 +887,7 @@ function addItem(tipo){
     </div>`;
   list.appendChild(div);
   addFotoSlots(id,2,document.getElementById('fotos-'+id));
-  recalcContadores();
+  autoUpdateCounters();
   updateSummary();
   setTimeout(()=>div.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
 }
@@ -880,7 +896,7 @@ function removeItem(id){
   items=items.filter(i=>i.id!==id);
   [0,1].forEach(s=>delete fotosStore[`${id}_${s}`]);
   const el=document.getElementById('item-'+id);if(el)el.remove();
-  recalcContadores();
+  autoUpdateCounters();
   updateSummary();
 }
 
@@ -948,19 +964,35 @@ function buildSummary(){
 // ── DRAFT SYSTEM ──
 // ══════════════════════════════════════
 const DRAFT_KEY='amc_drafts';
+const AUTOSAVE_KEY='amc_autosave';
+let _autosaveDraftId=null; // tracks the current session's autosave slot
 
 function getDrafts(){
   try{return JSON.parse(localStorage.getItem(DRAFT_KEY)||'[]');}catch(e){return[];}
 }
 function saveDrafts(arr){
-  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(arr));}catch(e){showToast('⚠️ Erro ao acessar armazenamento local','red');}
+  try{localStorage.setItem(DRAFT_KEY,JSON.stringify(arr));}
+  catch(e){showToast('⚠️ Armazenamento cheio! Exclua rascunhos antigos.','red');}
+}
+
+// Fotos are stored separately (large base64 data) to avoid corrupting the main drafts JSON
+function saveFotosDraft(draftId, fotosData){
+  try{localStorage.setItem('amc_fotos_'+draftId, JSON.stringify(fotosData));}
+  catch(e){/* fotos too large - skip silently, forms data is still saved */}
+}
+function loadFotosDraft(draftId){
+  try{return JSON.parse(localStorage.getItem('amc_fotos_'+draftId)||'{}');}
+  catch(e){return{};}
+}
+function deleteFotosDraft(draftId){
+  try{localStorage.removeItem('amc_fotos_'+draftId);}catch(e){}
 }
 
 function captureState(){
   // Capture all field values
   const formData={};
   document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{
-    if(el.id)formData[el.id]=el.value;
+    if(el.id && el.type!=='file')formData[el.id]=el.value;
   });
   // Capture equipe entries DOM
   const eqData=equipeEntries.map(e=>{
@@ -969,7 +1001,7 @@ function captureState(){
     const compEl=document.getElementById(`eq-comp-${e.id}`);
     return{id:e.id,tipo:e.tipo,tipoVal:tipoEl?tipoEl.value:'',prefix:prefEl?prefEl.value:'',comp:compEl?compEl.value:''};
   });
-  // Capture items
+  // Capture items with ALL field values (including outro fields)
   const itemsData=items.map(item=>{
     const fields={};
     (fieldDefs[item.tipo]||[]).forEach(([fid])=>{
@@ -982,34 +1014,72 @@ function captureState(){
   });
   // Capture orgaos
   const orgaosData=[...orgaosSel];
-  // Capture fotos (base64)
-  const fotosData={...fotosStore};
-  return{formData,eqData,itemsData,orgaosData,fotosData,eqCtr,itemCtr};
+  return{formData,eqData,itemsData,orgaosData,eqCtr,itemCtr};
 }
 
-function salvarRascunho(){
+function salvarRascunho(silent){
   const state=captureState();
   const nome=document.getElementById('nome-agente').value.trim()||'Sem nome';
   const corredor=getCorreedor();
   const dataFmt=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const drafts=getDrafts();
-  // Max 10 drafts
-  const draft={id:Date.now(),name:nome+' | '+corredor,savedAt:dataFmt,state};
+  const draftId=Date.now();
+  const draft={id:draftId,name:nome+' | '+corredor,savedAt:dataFmt,state};
   drafts.unshift(draft);
   if(drafts.length>10)drafts.splice(10);
   saveDrafts(drafts);
+  // Save fotos separately to avoid corrupting main storage
+  saveFotosDraft(draftId, fotosStore);
   // Update badge
   const badge=document.getElementById('draft-badge');
   badge.classList.add('show','saved');
-  badge.textContent='✓ Rascunho salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  showToast('✓ Rascunho salvo com sucesso!');
+  badge.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(!silent)showToast('✓ Rascunho salvo com sucesso!');
 }
 
-// Auto-save every 2 minutes
-setInterval(()=>{
+// Auto-save: updates one dedicated autosave slot instead of creating a new draft each time
+function _autoSave(){
   const nome=document.getElementById('nome-agente').value.trim();
-  if(nome)salvarRascunho();
-},120000);
+  if(!nome)return; // only autosave if user started filling
+  const state=captureState();
+  const dataFmt=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const corredor=getCorreedor();
+  try{
+    const drafts=getDrafts();
+    if(_autosaveDraftId){
+      // Update existing autosave slot
+      const idx=drafts.findIndex(d=>d.id===_autosaveDraftId);
+      if(idx>=0){
+        drafts[idx]={...drafts[idx],name:'[Auto] '+nome+' | '+corredor,savedAt:dataFmt,state};
+        saveDrafts(drafts);
+        saveFotosDraft(_autosaveDraftId, fotosStore);
+        return;
+      }
+    }
+    // Create new autosave slot
+    _autosaveDraftId=Date.now();
+    const draft={id:_autosaveDraftId,name:'[Auto] '+nome+' | '+corredor,savedAt:dataFmt,state,isAutosave:true};
+    drafts.unshift(draft);
+    if(drafts.length>10)drafts.splice(10);
+    saveDrafts(drafts);
+    saveFotosDraft(_autosaveDraftId, fotosStore);
+  }catch(e){}
+  // Update badge silently
+  const badge=document.getElementById('draft-badge');
+  badge.classList.add('show','saved');
+  badge.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// Auto-save every 30 seconds (was 2 min - too slow for mobile users)
+setInterval(_autoSave, 30000);
+
+// Also save on visibility change (user switches app on mobile)
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)_autoSave();
+});
+
+// Save before page unload
+window.addEventListener('beforeunload',()=>{_autoSave();});
 
 function checkAutoSave(){
   const drafts=getDrafts();
@@ -1030,8 +1100,8 @@ function abrirModal(type){
       container.innerHTML='<div class="draft-list">'+drafts.map(d=>`
         <div class="draft-item" onclick="carregarRascunho(${d.id})">
           <div class="di-info">
-            <div class="di-name">${d.name}</div>
-            <div class="di-meta">Salvo em: ${d.savedAt} · ${d.state.itemsData.length} registro(s)</div>
+            <div class="di-name">${d.isAutosave?'<span style="color:#aaa;font-size:10px">[AUTO] </span>':''}<span>${d.name.replace(/^\[Auto\] /,'')}</span></div>
+            <div class="di-meta">Salvo em: ${d.savedAt} · ${d.state.itemsData?d.state.itemsData.length:0} registro(s)</div>
           </div>
           <button class="di-del" onclick="deletarRascunho(event,${d.id})" title="Excluir">🗑</button>
         </div>`).join('')+'</div>';
@@ -1048,24 +1118,31 @@ function carregarRascunho(id){
   const draft=drafts.find(d=>d.id===id);
   if(!draft)return;
   fecharModal('load');
-  restoreState(draft.state);
-  showToast('✓ Rascunho carregado: '+draft.name,'blue');
+  // Load fotos from separate storage
+  const fotosData=loadFotosDraft(id);
+  restoreState(draft.state, fotosData);
+  _autosaveDraftId=id; // future autosaves will update this slot
+  showToast('✓ Rascunho carregado: '+draft.name.replace(/^\[Auto\] /,''),'blue');
 }
 
 function deletarRascunho(ev,id){
   ev.stopPropagation();
   const drafts=getDrafts().filter(d=>d.id!==id);
   saveDrafts(drafts);
+  deleteFotosDraft(id);
+  if(_autosaveDraftId===id)_autosaveDraftId=null;
   abrirModal('load');// refresh
 }
 
-function restoreState(state){
-  // Clear current
+function restoreState(state, fotosData){
+  // Clear current state
   hardReset(false);
-  // Restore eqCtr and itemCtr
+
+  // Restore counters
   eqCtr=state.eqCtr||0;
   itemCtr=state.itemCtr||0;
-  // Restore equipe entries
+
+  // Restore equipe entries synchronously
   (state.eqData||[]).forEach(e=>{
     equipeEntries.push({id:e.id,tipo:e.tipo});
     const meta=equipeTipos[e.tipo]||{label:e.tipo,icon:'➕',prefix:''};
@@ -1079,13 +1156,12 @@ function restoreState(state){
       <div class="field" style="flex:2"><label>Componentes</label><input type="text" id="eq-comp-${e.id}" placeholder="Nomes dos agentes" oninput="updateSummary()"></div>
       <button class="btn-eq-rm" onclick="removeEquipeEntry(${e.id})" title="Remover">✕</button>`;
     container.appendChild(div);
-    // Set values after DOM
-    setTimeout(()=>{
-      const ti=document.getElementById(`eq-tipo-${e.id}`);if(ti)ti.value=e.tipoVal||'';
-      const pi=document.getElementById(`eq-prefix-${e.id}`);if(pi)pi.value=e.prefix||'';
-      const ci=document.getElementById(`eq-comp-${e.id}`);if(ci)ci.value=e.comp||'';
-    },0);
+    // Set equipe field values immediately (elements just created)
+    const ti=document.getElementById(`eq-tipo-${e.id}`);if(ti)ti.value=e.tipoVal||'';
+    const pi=document.getElementById(`eq-prefix-${e.id}`);if(pi)pi.value=e.prefix||'';
+    const ci=document.getElementById(`eq-comp-${e.id}`);if(ci)ci.value=e.comp||'';
   });
+
   // Restore orgaos
   (state.orgaosData||[]).forEach(o=>{
     orgaosSel.add(o);
@@ -1093,7 +1169,8 @@ function restoreState(state){
       if(chip.getAttribute('onclick')&&chip.getAttribute('onclick').includes(`'${o}'`))chip.classList.add('selected');
     });
   });
-  // Restore items
+
+  // Restore items and their fields synchronously
   (state.itemsData||[]).forEach(item=>{
     const meta=itemLabels[item.tipo];if(!meta)return;
     items.push({id:item.id,tipo:item.tipo});
@@ -1114,32 +1191,36 @@ function restoreState(state){
       </div>`;
     list.appendChild(div);
     addFotoSlots(item.id,2,document.getElementById('fotos-'+item.id));
-    // Restore field values
-    setTimeout(()=>{
-      Object.entries(item.fields||{}).forEach(([fid,val])=>{
-        const el=document.getElementById(`f${item.id}-${fid}`);
-        if(el){el.value=val;
-          if(fid.endsWith('-o')&&val){const base=fid.slice(0,-2);const sel=document.getElementById(`f${item.id}-${base}`);if(sel&&el.classList!==undefined)el.classList.add('show');}
+    // Restore field values immediately
+    Object.entries(item.fields||{}).forEach(([fid,val])=>{
+      const el=document.getElementById(`f${item.id}-${fid}`);
+      if(el){
+        el.value=val;
+        // If this is an "outro" field, show it if it has value
+        if(fid.endsWith('-o')&&val){
+          el.classList.add('show');
         }
-      });
-    },0);
-  });
-  // Restore fotos
-  Object.entries(state.fotosData||{}).forEach(([key,data])=>{
-    fotosStore[key]=data;
-    setTimeout(()=>{
-      const img=document.getElementById('fimg-'+key);if(img)img.src=data;
-      const prev=document.getElementById('fprev-'+key);if(prev)prev.classList.add('has-img');
-    },50);
-  });
-  // Restore form fields
-  setTimeout(()=>{
-    Object.entries(state.formData||{}).forEach(([id,val])=>{
-      const el=document.getElementById(id);if(el)el.value=val;
+      }
     });
-    onCorredorChange();
-    updateSummary();
-  },10);
+  });
+
+  // Restore main form fields (data, hora, nome, etc.)
+  Object.entries(state.formData||{}).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el && el.type!=='file')el.value=val;
+  });
+
+  // Restore fotos from separately stored data
+  const fotosToRestore=fotosData||{};
+  Object.entries(fotosToRestore).forEach(([key,data])=>{
+    fotosStore[key]=data;
+    const img=document.getElementById('fimg-'+key);if(img)img.src=data;
+    const prev=document.getElementById('fprev-'+key);if(prev)prev.classList.add('has-img');
+  });
+
+  onCorredorChange();
+  autoUpdateCounters();
+  updateSummary();
 }
 
 function confirmarLimpar(){
@@ -1152,17 +1233,18 @@ function confirmarLimpar(){
 }
 
 function hardReset(showMsg){
-  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>el.value='');
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{if(el.type!=='file')el.value='';});
   items=[];itemCtr=0;equipeEntries=[];eqCtr=0;
   Object.keys(fotosStore).forEach(k=>delete fotosStore[k]);
   orgaosSel.clear();
   document.querySelectorAll('.orgao-chip').forEach(o=>o.classList.remove('selected'));
-  ['cnt-aut','cnt-nva','cnt-suv','cnt-rem','cnt-ori'].forEach(cid=>resetContadorManual(cid));
   ['list-fiscalizacao','list-estrutura','list-educacao','list-outros'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML='';
   });
   document.getElementById('equipe-entries').innerHTML='';
   document.getElementById('corredor-outro').style.display='none';
+  // Resetar flags de edição manual dos contadores
+  ['cnt-aut','cnt-nva','cnt-suv','cnt-rem','cnt-ori'].forEach(cid=>resetContadorManual(cid));
   const badge=document.getElementById('draft-badge');badge.classList.remove('show','saved');
   const n=new Date();
   document.getElementById('data-oc').value=n.toISOString().slice(0,10);
