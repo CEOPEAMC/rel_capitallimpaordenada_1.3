@@ -35,11 +35,11 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .clock .date{font-size:9px;color:rgba(255,255,255,0.6);margin-top:1px;}
 
 /* CORREDOR BAR */
-.corredor-bar{background:var(--cinza-escuro);padding:7px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.corredor-bar label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;}
-.corredor-bar select{background:#2a2a2a;border:1px solid #444;color:var(--laranja-claro);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:5px 8px;border-radius:4px;-webkit-appearance:none;min-width:0;flex-shrink:0;}
-.corredor-outro{background:#2a2a2a;border:1px solid #666;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;padding:5px 8px;border-radius:4px;flex:1;min-width:120px;display:none;}
-.corredor-outro::placeholder{color:#555;}
+.corredor-bar{background:#1e3a5f;padding:9px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:3px solid var(--verde);}
+.corredor-bar label{font-size:10px;color:#a8c4e0;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;font-weight:600;}
+.corredor-bar select{background:#163050;border:1.5px solid var(--verde);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 10px;border-radius:6px;-webkit-appearance:none;min-width:0;flex-shrink:0;}
+.corredor-outro{background:#163050;border:1.5px solid var(--verde);color:#fff;font-family:'Barlow',sans-serif;font-size:13px;padding:6px 10px;border-radius:6px;flex:1;min-width:120px;display:none;}
+.corredor-outro::placeholder{color:#6a9abf;}
 .programa-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--verde);letter-spacing:1px;text-transform:uppercase;background:rgba(91,184,42,0.12);border:1px solid rgba(91,184,42,0.3);padding:3px 10px;border-radius:20px;white-space:nowrap;}
 .draft-badge{font-size:10px;font-weight:600;color:#aaa;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:3px 8px;border-radius:20px;white-space:nowrap;display:none;}
 .draft-badge.show{display:inline-block;}
@@ -256,7 +256,7 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
     </div>
     <div class="header-title">
       <h1>Registro de Ações em Campo</h1>
-      <div class="sub">Capital Limpa &amp; Ordenada – Fase 1</div>
+      <div class="sub">Capital Limpa &amp; Ordenada – 4º Ciclo</div>
     </div>
     <div class="header-right">
       <div class="clock">
@@ -271,14 +271,16 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 <div class="corredor-bar">
   <label>Corredor:</label>
   <select id="corredor-ativo" onchange="onCorredorChange()">
-    <option value="">Selecione o corredor...</option>
-    <option value="AV. LESTE-OESTE">Av. Leste-Oeste (Pirambu)</option>
-    <option value="AV. DUQUE DE CAXIAS">Av. Duque de Caxias (Centro)</option>
-    <option value="AV. GENERAL OSÓRIO DE PAIVA">Av. Osório de Paiva (Siqueira)</option>
+    <option value="">Selecione a via...</option>
+    <optgroup label="Operação Capital Limpa e Ordenada – 4º Ciclo (28/04–18/05)">
+      <option value="AV. ROGACIANO LEITE">Av. Rogaciano Leite</option>
+      <option value="RUA PORTO VELHO">Rua Porto Velho</option>
+      <option value="AV. JOVITA FEITOSA">Av. Jovita Feitosa</option>
+    </optgroup>
     <option value="OUTRO">Outro corredor...</option>
   </select>
   <input class="corredor-outro" id="corredor-outro" type="text" placeholder="Nome do corredor" oninput="updateSummary()">
-  <span class="programa-tag">● Capital Limpa &amp; Ordenada</span>
+  <span class="programa-tag">● Cap. Limpa &amp; Ordenada · 4º Ciclo · 28/04–18/05</span>
   <span class="draft-badge" id="draft-badge">● Rascunho salvo</span>
 </div>
 
@@ -360,11 +362,11 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
         </div>
         <div class="field">
           <label>Hora de início <span class="req">*</span></label>
-          <input type="time" id="hora-ini" oninput="updateSummary()">
+          <input type="time" id="hora-ini" oninput="updateSummary();validarHorario()">
         </div>
         <div class="field">
           <label>Hora de encerramento</label>
-          <input type="time" id="hora-fim">
+          <input type="time" id="hora-fim" oninput="validarHorario()">
         </div>
       </div>
     </div>
@@ -649,15 +651,40 @@ function createFotoItem(key){
     </div>`;
   return wrap;
 }
+// ── COMPRESSÃO DE FOTO: redimensiona para max 1400px, qualidade 0.78 ──
+function comprimirFoto(dataUrl, callback){
+  const img=new Image();
+  img.onload=()=>{
+    const MAX=1400;
+    let w=img.naturalWidth,h=img.naturalHeight;
+    if(w>MAX||h>MAX){
+      if(w>h){h=Math.round(h*MAX/w);w=MAX;}
+      else{w=Math.round(w*MAX/h);h=MAX;}
+    }
+    const canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    canvas.getContext('2d').drawImage(img,0,0,w,h);
+    callback(canvas.toDataURL('image/jpeg',0.78));
+  };
+  img.src=dataUrl;
+}
 function handleFoto(event,key){
   const file=event.target.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=e=>{
-    fotosStore[key]=e.target.result;
-    const img=document.getElementById('fimg-'+key);img.src=e.target.result;
-    document.getElementById('fprev-'+key).classList.add('has-img');
-    // reset both inputs so same file can be re-selected
-    event.target.value='';
+    comprimirFoto(e.target.result, compressed=>{
+      // Verifica espaço disponível antes de salvar (avisa se localStorage estiver cheio)
+      try{
+        fotosStore[key]=compressed;
+        saveFotosDraft('_preview_'+key, {[key]:compressed});
+        localStorage.removeItem('amc_fotos__preview_'+key);
+      }catch(err){
+        showToast('⚠️ Armazenamento cheio! Foto não salva no rascunho.','red');
+      }
+      const img=document.getElementById('fimg-'+key);img.src=compressed;
+      document.getElementById('fprev-'+key).classList.add('has-img');
+      event.target.value='';
+    });
   };
   r.readAsDataURL(file);
 }
@@ -711,6 +738,16 @@ function tf(id,iid,lbl,pl,span){
   const sc=span===3?'s3':span===2?'s2':'';
   return`<div class="field ${sc}"><label>${lbl}</label><input type="text" id="f${iid}-${id}" placeholder="${pl||''}" oninput="updateSummary()"></div>`;
 }
+// ── CAMPO PLACA: máscara automática + validação visual ──
+function tf_placa(id,iid,lbl,pl){
+  return`<div class="field"><label>${lbl}</label>
+    <input type="text" id="f${iid}-${id}" placeholder="${pl||''}" maxlength="8"
+      style="text-transform:uppercase;letter-spacing:2px;font-weight:700"
+      oninput="mascaraPlaca(this);updateSummary()"
+      onblur="validarPlaca(this)">
+    <span class="placa-hint" id="ph-${iid}-${id}" style="font-size:10px;color:#aaa;display:block;margin-top:2px"></span>
+  </div>`;
+}
 function ta(id,iid,lbl,pl,span){
   const sc=span===3?'s3':span===2?'s2':'';
   return`<div class="field ${sc}"><label>${lbl}</label><textarea id="f${iid}-${id}" placeholder="${pl||''}" oninput="updateSummary()"></textarea></div>`;
@@ -720,7 +757,7 @@ function buildFields(tipo,iid){
   switch(tipo){
     case'infracao':return`<div class="fg fg-3">
       ${tf('art',iid,'Artigo / Enquadramento','Ex: Art. 181-XVII CTB')}
-      ${tf('placa',iid,'Placa do veículo','ABC-1A23')}
+      ${tf_placa('placa',iid,'Placa do veículo','ABC-1A23')}
       ${sf('tipov',iid,'Tipo de veículo',['Carro','Moto','Caminhão','Ônibus','Van/Utilitário','Outros'],1,true)}
       ${tf('auto',iid,'N° do Auto (AIT)','N° do AIT')}
       ${tf('local',iid,'Local exato','Rua/Av. + n° ou referência',2)}
@@ -733,7 +770,7 @@ function buildFields(tipo,iid){
       ${sf('prov',iid,'Providência tomada',['Notificação','Apreensão','Remoção solicitada','Orientação','Aguardando remoção','Outros'],1,true)}
       ${ta('obs',iid,'Observações','Detalhe a situação...',3)}</div>`;
     case'nva':return`<div class="fg fg-3">
-      ${tf('placa',iid,'Placa (se visível)','ABC-1A23 ou ilegível')}
+      ${tf_placa('placa',iid,'Placa (se visível)','ABC-1A23 ou ilegível')}
       ${sf('tipo',iid,'Tipo de veículo',['Carro','Moto','Caminhão','Ônibus','Bicicleta','Outros'],1,true)}
       ${tf('cor',iid,'Cor','Cor do veículo')}
       ${tf('local',iid,'Local exato','Endereço completo',2)}
@@ -900,6 +937,72 @@ function removeItem(id){
   updateSummary();
 }
 
+// ── MÁSCARA E VALIDAÇÃO DE PLACA ──
+function mascaraPlaca(el){
+  let v=el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  // Mercosul: ABC1D23 (7 chars sem hífen) | Antigo: ABC1234
+  if(v.length>3&&/^[A-Z]{3}/.test(v)){
+    v=v.substring(0,3)+'-'+v.substring(3,7);
+  }
+  el.value=v;
+}
+function validarPlaca(el){
+  const v=el.value.replace('-','');
+  const hint=document.getElementById('ph-'+el.id.replace('f','').replace('-placa','') + '-' + el.id.split('-').pop() + '-placa') || el.nextElementSibling;
+  // Aceita Mercosul (ABC1D23) ou antigo (ABC1234) ou "ilegível"
+  const mercosul=/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(v);
+  const antigo=/^[A-Z]{3}[0-9]{4}$/.test(v);
+  const ilegivel=el.value.toLowerCase().includes('ileg');
+  if(!el.value){if(hint){hint.textContent='';hint.style.color='#aaa';}return;}
+  if(mercosul){if(hint){hint.textContent='✓ Mercosul';hint.style.color='#2e7d1f';}}
+  else if(antigo){if(hint){hint.textContent='✓ Padrão antigo';hint.style.color='#2e7d1f';}}
+  else if(ilegivel){if(hint){hint.textContent='Ilegível registrado';hint.style.color='#888';}}
+  else{if(hint){hint.textContent='⚠ Formato inválido (ex: ABC1D23)';hint.style.color='#c0392b';}}
+}
+
+// ── VALIDAÇÃO DE HORÁRIO ──
+function validarHorario(){
+  const ini=document.getElementById('hora-ini').value;
+  const fim=document.getElementById('hora-fim').value;
+  const fimEl=document.getElementById('hora-fim');
+  if(ini&&fim&&fim<=ini){
+    fimEl.style.borderColor='#c0392b';
+    showToast('⚠️ Hora de encerramento deve ser posterior ao início.','red');
+  }else{
+    fimEl.style.borderColor='';
+  }
+}
+
+// ── VALIDAÇÃO ANTES DE GERAR PDF ──
+function validarParaPDF(){
+  const erros=[];
+  const nome=document.getElementById('nome-agente').value.trim();
+  const corredor=getCorreedor();
+  const data=document.getElementById('data-oc').value;
+  const turno=document.getElementById('turno').value;
+  const ini=document.getElementById('hora-ini').value;
+  const fim=document.getElementById('hora-fim').value;
+  if(!nome)erros.push('Nome do coordenador');
+  if(!corredor||corredor==='—')erros.push('Corredor / via');
+  if(!data)erros.push('Data da ocorrência');
+  if(!turno)erros.push('Turno');
+  if(ini&&fim&&fim<=ini)erros.push('Hora de encerramento deve ser posterior ao início');
+  if(erros.length){
+    showToast('⚠️ Preencha: '+erros.join(', '),'red');
+    return false;
+  }
+  return true;
+}
+
+// ── BLOQUEIO DO BOTÃO PDF DURANTE GERAÇÃO ──
+function setPDFBtnState(loading){
+  const btns=document.querySelectorAll('[onclick="gerarPDF()"]');
+  btns.forEach(b=>{
+    if(loading){b.disabled=true;b._orig=b.innerHTML;b.innerHTML='⏳ Gerando...';}
+    else{b.disabled=false;b.innerHTML=b._orig||b.innerHTML;}
+  });
+}
+
 // ── STATUS BAR ──
 function updateSummary(){
   const nome=document.getElementById('nome-agente').value.trim();
@@ -978,7 +1081,12 @@ function saveDrafts(arr){
 // Fotos are stored separately (large base64 data) to avoid corrupting the main drafts JSON
 function saveFotosDraft(draftId, fotosData){
   try{localStorage.setItem('amc_fotos_'+draftId, JSON.stringify(fotosData));}
-  catch(e){/* fotos too large - skip silently, forms data is still saved */}
+  catch(e){
+    // Armazenamento cheio — avisa o usuário (não silencia mais)
+    if(e.name==='QuotaExceededError'||e.code===22||e.code===1014){
+      showToast('⚠️ Armazenamento do navegador cheio! Fotos não salvas no rascunho. Os dados textuais foram salvos normalmente.','red');
+    }
+  }
 }
 function loadFotosDraft(draftId){
   try{return JSON.parse(localStorage.getItem('amc_fotos_'+draftId)||'{}');}
@@ -1224,10 +1332,20 @@ function restoreState(state, fotosData){
 }
 
 function confirmarLimpar(){
-  document.getElementById('modal-confirm-title').textContent='🗑 Limpar tudo';
-  document.getElementById('modal-confirm-msg').textContent='Todos os dados do formulário serão apagados. Deseja continuar? (O rascunho salvo não será apagado.)';
+  // Verifica se há dados preenchidos não salvos
+  const nome=document.getElementById('nome-agente').value.trim();
+  const badge=document.getElementById('draft-badge');
+  const temDados=nome||items.length>0;
+  const naoSalvo=temDados&&!badge.classList.contains('saved');
+  const titulo=naoSalvo?'⚠️ Dados não salvos!':'🗑 Limpar tudo';
+  const msg=naoSalvo
+    ?'Existem dados preenchidos que NÃO foram salvos como rascunho. Ao limpar, eles serão perdidos permanentemente. Deseja continuar mesmo assim?'
+    :'Todos os dados do formulário serão apagados. Deseja continuar? (O rascunho salvo não será apagado.)';
+  document.getElementById('modal-confirm-title').textContent=titulo;
+  document.getElementById('modal-confirm-msg').textContent=msg;
   const btn=document.getElementById('modal-confirm-btn');
-  btn.className='modal-confirm';btn.textContent='Limpar';
+  btn.className='modal-confirm';btn.textContent=naoSalvo?'Perder dados e limpar':'Limpar';
+  if(naoSalvo)btn.style.background='#c0392b';else btn.style.background='';
   btn.onclick=()=>{fecharModal('confirm');hardReset(true);};
   document.getElementById('modal-confirm').classList.add('show');
 }
@@ -1255,122 +1373,191 @@ function hardReset(showMsg){
 }
 
 // ── PDF ──
-function gerarPDF(){
+// ── CORREÇÃO: calcula dimensões reais da imagem mantendo proporção ──
+function calcImgDims(dataUrl, maxW, maxH){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const ratio=img.naturalWidth/img.naturalHeight;
+      let w=maxW,h=maxW/ratio;
+      if(h>maxH){h=maxH;w=maxH*ratio;}
+      resolve({w,h});
+    };
+    img.onerror=()=>resolve({w:maxW,h:maxH});
+    img.src=dataUrl;
+  });
+}
+
+async function gerarPDF(){
+  if(!validarParaPDF())return;
+  setPDFBtnState(true);
+  try{
   buildSummary();
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF('p','mm','a4');
   const W=210,M=13;let y=0;
-  // Header
-  doc.setFillColor(232,82,10);doc.rect(0,0,W,20,'F');
-  doc.setFillColor(26,26,26);doc.rect(0,0,50,20,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(232,82,10);doc.text('AMC',6,13);
-  doc.setFontSize(7.5);doc.setTextColor(180,180,180);doc.setFont('helvetica','normal');
-  doc.text('Autarquia Municipal de Trânsito de Fortaleza',20,10);
-  doc.setFontSize(7);doc.text('Capital Limpa & Ordenada – Fase 1',20,15);
-  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(255,255,255);doc.text('REGISTRO DE AÇÕES EM CAMPO',55,13);
-  y=26;
 
-  // Corredor
+  // ── CABEÇALHO ──
+  doc.setFillColor(232,82,10);doc.rect(0,0,W,22,'F');
+  doc.setFillColor(26,26,26);doc.rect(0,0,52,22,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(232,82,10);doc.text('AMC',6,15);
+  doc.setFontSize(7.5);doc.setTextColor(180,180,180);doc.setFont('helvetica','normal');
+  doc.text('Autarquia Municipal de Trânsito',20,12);
+  doc.text('de Fortaleza',20,17.5);
+  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(255,255,255);
+  doc.text('REGISTRO DE AÇÕES EM CAMPO',57,15);
+  y=28;
+
+  // ── BARRA CORREDOR ──
   const corredor=getCorreedor();
   const dataFmt=document.getElementById('data-oc').value.split('-').reverse().join('/');
   const hini=document.getElementById('hora-ini').value||'—';
   const hfim=document.getElementById('hora-fim').value||'—';
-  doc.setFillColor(91,184,42);doc.roundedRect(M,y,W-2*M,7,1,1,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
-  doc.text('CORREDOR: '+corredor,M+3,y+5);
-  doc.text('DATA: '+dataFmt+'   '+hini+' – '+hfim,W-M-62,y+5);
-  y+=12;
+  doc.setFillColor(91,184,42);doc.roundedRect(M,y,W-2*M,8,1.5,1.5,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(255,255,255);
+  doc.text('CORREDOR: '+corredor,M+3,y+5.5);
+  doc.text('DATA: '+dataFmt+'   '+hini+' – '+hfim,W-M-70,y+5.5);
+  y+=13;
 
-  // ID block
+  // ── BLOCO DE IDENTIFICAÇÃO ──
   const nome=gv('nome-agente'),mat=gv('matricula'),turno=gv('turno');
   const equipe=getEquipeSummary(),orgaos=getOrgaos();
+  // Calcula altura dinâmica do bloco de ID
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  const eqLines=doc.splitTextToSize(equipe,W-2*M-52-6);
+  const ogLines=doc.splitTextToSize(orgaos,W-2*M-52-6);
+  const rh=7; // espaçamento entre linhas (era 6)
+  const idBlockH=Math.max(42, 14 + Math.max(3,(eqLines.length+ogLines.length+1))*rh + 4);
   doc.setDrawColor(220,220,215);doc.setFillColor(255,252,248);
-  doc.roundedRect(M,y,W-2*M,40,2,2,'FD');
-  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(232,82,10);
-  doc.text('IDENTIFICAÇÃO E EQUIPE',M+3,y+5);
-  const c1=M+3,c2=M+52,rh=6;let ry=y+12;
+  doc.roundedRect(M,y,W-2*M,idBlockH,2,2,'FD');
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(232,82,10);
+  doc.text('IDENTIFICAÇÃO E EQUIPE',M+3,y+6);
+  const c1=M+4,c2=M+54;let ry=y+14;
+  // Coluna esquerda
   [['Coordenador:',nome],['Matrícula:',mat],['Turno:',turno]].forEach(([l,v])=>{
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text(l,c1,ry);
-    doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);doc.text(String(v).substring(0,26),c1+22,ry);ry+=rh;
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text(l,c1,ry);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
+    doc.text(String(v).substring(0,28),c1+24,ry);ry+=rh;
   });
-  ry=y+12;
-  // Equipe (long text, wrap)
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text('Equipe:',c2,ry);
-  doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
-  const eqLines=doc.splitTextToSize(equipe,W-2*M-c2+M-2);
-  doc.text(eqLines,c2+20,ry);ry+=Math.max(rh,eqLines.length*rh);
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text('Órgãos:',c2,ry);
-  doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
-  const ogLines=doc.splitTextToSize(orgaos,W-2*M-c2+M-2);
-  doc.text(ogLines,c2+20,ry);
-  y+=45;
+  // Coluna direita
+  let ry2=y+14;
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Equipe:',c2,ry2);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
+  doc.text(eqLines,c2+22,ry2);ry2+=Math.max(rh,eqLines.length*rh);
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Órgãos:',c2,ry2);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
+  doc.text(ogLines,c2+22,ry2);
+  y+=idBlockH+4;
 
-  // Counters
+  // ── TOTALIZADORES ──
   const ctrs=[['cnt-aut','Autuações',[232,82,10]],['cnt-nva','NVA',[27,79,138]],['cnt-suv','SUV',[180,110,10]],['cnt-rem','Remoções',[180,30,30]],['cnt-ori','Orientações',[46,125,31]]];
   const bw=(W-2*M-8)/5;
   ctrs.forEach(([id,lbl,rgb],i)=>{
     const val=document.getElementById(id).value||'0';
     const bx=M+i*(bw+2);
-    doc.setFillColor(...rgb);doc.setDrawColor(...rgb);doc.roundedRect(bx,y,bw,13,1.5,1.5,'FD');
-    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(255,255,255);doc.text(val,bx+bw/2,y+7.5,{align:'center'});
-    doc.setFontSize(5.5);doc.text(lbl.toUpperCase(),bx+bw/2,y+12,{align:'center'});
+    doc.setFillColor(...rgb);doc.setDrawColor(...rgb);
+    doc.roundedRect(bx,y,bw,16,2,2,'FD');
+    doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(255,255,255);
+    doc.text(val,bx+bw/2,y+9,{align:'center'});
+    doc.setFontSize(6.5);doc.text(lbl.toUpperCase(),bx+bw/2,y+14.5,{align:'center'});
   });
-  y+=18;
+  y+=21;
 
-  // Items
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(232,82,10);
+  // ── REGISTROS DETALHADOS ──
+  doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(232,82,10);
   doc.text('REGISTROS DETALHADOS ('+items.length+')',M,y);y+=3;
-  doc.setDrawColor(232,82,10);doc.setLineWidth(0.3);doc.line(M,y,W-M,y);y+=5;
+  doc.setDrawColor(232,82,10);doc.setLineWidth(0.4);doc.line(M,y,W-M,y);y+=6;
 
   for(let idx=0;idx<items.length;idx++){
     const item=items[idx];const meta=itemLabels[item.tipo];
-    if(y>255){doc.addPage();y=14;}
-    doc.setFillColor(250,247,243);doc.roundedRect(M,y,W-2*M,6,1,1,'F');
-    doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(232,82,10);
-    doc.text(`${idx+1}. ${meta.label.toUpperCase()}`,M+3,y+4.3);y+=8;
+    if(y>255){doc.addPage();y=15;}
+
+    // Cabeçalho do registro (fundo laranja claro)
+    doc.setFillColor(250,247,243);doc.roundedRect(M,y,W-2*M,7.5,1.5,1.5,'F');
+    doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(232,82,10);
+    doc.text(`${idx+1}. ${meta.label.toUpperCase()}`,M+4,y+5.3);y+=10;
+
+    // Campos do registro
     getItemDetails(item).forEach(d=>{
-      if(y>265){doc.addPage();y=14;}
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(140,140,140);doc.text(d.lbl+':',M+4,y);
-      doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);
-      const lines=doc.splitTextToSize(d.val,W-2*M-44);doc.text(lines,M+44,y);y+=Math.max(5,lines.length*4.5);
+      if(y>265){doc.addPage();y=15;}
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(140,140,140);
+      doc.text(d.lbl+':',M+5,y);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
+      const lines=doc.splitTextToSize(d.val,W-2*M-46);
+      doc.text(lines,M+46,y);y+=Math.max(6,lines.length*5.5);
     });
+
+    // ── FOTOS com proporção correta ──
     const fkeys=[0,1].map(s=>`${item.id}_${s}`).filter(k=>fotosStore[k]);
     if(fkeys.length){
-      if(y>240){doc.addPage();y=14;}
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(140,140,140);doc.text('Fotos:',M+4,y);y+=4;
-      fkeys.forEach((k,fi)=>{
-        try{if(y>230){doc.addPage();y=14;}doc.addImage(fotosStore[k],'JPEG',M+4+fi*44,y,40,30);if(fi===fkeys.length-1)y+=34;}catch(e){}
-      });
+      if(y>240){doc.addPage();y=15;}
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(140,140,140);
+      doc.text('Fotos:',M+5,y);y+=5;
+
+      const maxFotoW=80; // largura máxima por foto (mm) — era 40
+      const maxFotoH=60; // altura máxima por foto (mm) — era 30
+      const gap=5;
+
+      for(let fi=0;fi<fkeys.length;fi++){
+        const k=fkeys[fi];
+        try{
+          // Detecta proporção real da imagem
+          const dims=await calcImgDims(fotosStore[k],maxFotoW,maxFotoH);
+          // Distribui lado a lado ou quebra de linha se não couber
+          const xFoto=M+5+fi*(maxFotoW+gap);
+          if(y+dims.h>278){doc.addPage();y=15;}
+          doc.addImage(fotosStore[k],'JPEG',xFoto,y,dims.w,dims.h);
+          // Borda leve ao redor da foto
+          doc.setDrawColor(200,195,190);doc.setLineWidth(0.2);
+          doc.rect(xFoto,y,dims.w,dims.h);
+          if(fi===fkeys.length-1)y+=dims.h+4;
+        }catch(e){/* foto inválida, pula */}
+      }
     }
-    doc.setDrawColor(220,215,210);doc.setLineWidth(0.2);doc.line(M,y,W-M,y);y+=4;
+
+    // Separador entre registros
+    doc.setDrawColor(225,220,215);doc.setLineWidth(0.2);doc.line(M,y,W-M,y);y+=5;
   }
 
+  // ── OBSERVAÇÕES GERAIS ──
   const obs=document.getElementById('obs-gerais').value;
   if(obs){
-    if(y>240){doc.addPage();y=14;}
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(232,82,10);doc.text('OBSERVAÇÕES GERAIS',M,y);y+=5;
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(50,50,50);
-    const ol=doc.splitTextToSize(obs,W-2*M);doc.text(ol,M,y);y+=ol.length*4.5+6;
+    if(y>240){doc.addPage();y=15;}
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(232,82,10);
+    doc.text('OBSERVAÇÕES GERAIS',M,y);y+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(50,50,50);
+    const ol=doc.splitTextToSize(obs,W-2*M);doc.text(ol,M,y);y+=ol.length*5.5+6;
   }
+
+  // ── OBSERVAÇÃO FINAL ──
   const obsf=document.getElementById('obs-final').value;
   if(obsf){
-    if(y>240){doc.addPage();y=14;}
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(232,82,10);doc.text('OBSERVAÇÃO FINAL',M,y);y+=5;
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(50,50,50);
-    const ol=doc.splitTextToSize(obsf,W-2*M);doc.text(ol,M,y);y+=ol.length*4.5+6;
+    if(y>240){doc.addPage();y=15;}
+    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(232,82,10);
+    doc.text('OBSERVAÇÃO FINAL',M,y);y+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(50,50,50);
+    const ol=doc.splitTextToSize(obsf,W-2*M);doc.text(ol,M,y);y+=ol.length*5.5+6;
   }
 
-  if(y>252){doc.addPage();y=14;}y+=4;
-  doc.setDrawColor(180,180,180);
-  doc.line(M,y,M+70,y);doc.setFontSize(7);doc.setTextColor(150,150,150);
-  doc.text('Assinatura do Coordenador',M,y+4);doc.text(nome,M,y+8);
-  doc.line(W-M-70,y,W-M,y);doc.text('Data e hora de geração',W-M-70,y+4);
-  const n=new Date();doc.text(`${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`,W-M-70,y+8);
+  // ── RODAPÉ DE ASSINATURA ──
+  if(y>252){doc.addPage();y=15;}y+=5;
+  doc.setDrawColor(180,180,180);doc.setLineWidth(0.3);
+  doc.line(M,y,M+75,y);
+  doc.setFontSize(8);doc.setTextColor(140,140,140);
+  doc.text('Assinatura do Coordenador',M,y+4);
+  doc.setFontSize(8.5);doc.setTextColor(30,30,30);doc.text(nome,M,y+9);
+  doc.line(W-M-75,y,W-M,y);
+  doc.setFontSize(8);doc.setTextColor(140,140,140);doc.text('Data e hora de geração',W-M-75,y+4);
+  const n=new Date();
+  doc.setFontSize(8.5);doc.setTextColor(30,30,30);
+  doc.text(`${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`,W-M-75,y+9);
 
+  // ── RODAPÉ DE PÁGINAS ──
   const pgs=doc.internal.getNumberOfPages();
   for(let i=1;i<=pgs;i++){
-    doc.setPage(i);doc.setFillColor(26,26,26);doc.rect(0,287,210,10,'F');
-    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(180,180,180);
+    doc.setPage(i);
+    doc.setFillColor(26,26,26);doc.rect(0,287,210,10,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(180,180,180);
     doc.text('AMC – Autarquia Municipal de Trânsito de Fortaleza | Capital Limpa & Ordenada',M,293);
     doc.text(`Página ${i} de ${pgs}`,W-M,293,{align:'right'});
   }
@@ -1378,6 +1565,7 @@ function gerarPDF(){
   const fn=`AMC_Campo_${nome.replace(/\s+/g,'_')}_${(document.getElementById('data-oc').value||'').replace(/-/g,'')}.pdf`;
   doc.save(fn);
   showToast('✓ PDF gerado com sucesso!');
+  }catch(e){showToast('❌ Erro ao gerar PDF: '+e.message,'red');}finally{setPDFBtnState(false);}
 }
 
 updateSummary();
