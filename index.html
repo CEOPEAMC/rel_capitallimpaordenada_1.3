@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>AMC – Registro de Campo</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -29,7 +32,10 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .header-title{flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
 .header-title h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(13px,3.8vw,19px);font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .header-title .sub{font-size:clamp(9px,2vw,11px);color:rgba(255,255,255,0.65);letter-spacing:0.8px;text-transform:uppercase;}
-.header-right{display:flex;align-items:center;padding:0 12px;flex-shrink:0;}
+.header-right{display:flex;align-items:center;padding:0 12px;flex-shrink:0;gap:8px;}
+.conn-dot{width:9px;height:9px;border-radius:50%;background:#888;flex-shrink:0;box-shadow:0 0 0 3px rgba(255,255,255,0.12);transition:background .3s;}
+.conn-dot.online{background:#6ee7b7;}
+.conn-dot.offline{background:#fca5a5;}
 .clock{background:rgba(0,0,0,0.2);border-radius:7px;padding:6px 12px;text-align:center;}
 .clock .time{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#fff;}
 .clock .date{font-size:9px;color:rgba(255,255,255,0.6);margin-top:1px;}
@@ -37,23 +43,41 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 /* CORREDOR BAR */
 .corredor-bar{background:#1e3a5f;padding:9px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:3px solid var(--verde);}
 .corredor-bar label{font-size:10px;color:#a8c4e0;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;font-weight:600;}
-.corredor-bar select{background:#163050;border:1.5px solid var(--verde);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:6px 10px;border-radius:6px;-webkit-appearance:none;min-width:0;flex-shrink:0;}
-.corredor-outro{background:#163050;border:1.5px solid var(--verde);color:#fff;font-family:'Barlow',sans-serif;font-size:13px;padding:6px 10px;border-radius:6px;flex:1;min-width:120px;display:none;}
-.corredor-outro::placeholder{color:#6a9abf;}
-.programa-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--verde);letter-spacing:1px;text-transform:uppercase;background:rgba(91,184,42,0.12);border:1px solid rgba(91,184,42,0.3);padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.corredor-combo{position:relative;flex:1.3;min-width:170px;}
+.corredor-combo input{width:100%;background:#163050;border:1.5px solid var(--verde);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:7px 10px;border-radius:6px;text-transform:uppercase;}
+.corredor-combo input::placeholder{color:#6a9abf;font-weight:500;text-transform:none;}
+.corredor-combo input:focus{outline:none;border-color:#86efac;}
+.programa-combo{position:relative;flex:1;min-width:150px;}
+.programa-combo input{width:100%;background:#163050;border:1.5px solid #6ea8d8;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:7px 10px;border-radius:6px;text-transform:uppercase;}
+.programa-combo input::placeholder{color:#7ba6cc;font-weight:500;text-transform:none;}
+.programa-combo input:focus{outline:none;border-color:#bfdbfe;}
+.corredor-dropdown,.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.25);max-height:220px;overflow-y:auto;display:none;z-index:60;border:1px solid #eee;}
+.corredor-dropdown.show,.ac-dropdown.show{display:block;}
+.cd-item{padding:9px 12px;font-size:13px;font-weight:600;color:var(--cinza-escuro);cursor:pointer;border-bottom:1px solid #f0f0f0;}
+.cd-item:last-child{border-bottom:none;}
+.cd-item:hover{background:rgba(27,79,138,0.07);}
+.cd-item.cd-new{color:var(--verde-escuro);}
+.cd-empty{padding:12px;font-size:12px;color:#aaa;text-align:center;}
+.ac-wrap{position:relative;}
 .draft-badge{font-size:10px;font-weight:600;color:#aaa;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:3px 8px;border-radius:20px;white-space:nowrap;display:none;}
 .draft-badge.show{display:inline-block;}
 .draft-badge.saved{color:#6ee7b7;border-color:rgba(110,231,183,0.3);}
+.sync-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;cursor:default;border:1px solid rgba(255,255,255,0.12);color:#aaa;background:rgba(255,255,255,0.05);}
+.sync-badge.syncing{color:#fcd34d;border-color:rgba(252,211,77,0.3);}
+.sync-badge.synced{color:#6ee7b7;border-color:rgba(110,231,183,0.3);}
+.sync-badge.error{color:#fca5a5;border-color:rgba(252,165,165,0.35);cursor:pointer;}
+.sync-badge.off{color:#888;}
 
 /* MAIN */
 .main{width:100%;padding:14px 12px 100px;}
 
 /* TABS */
-.tabs{display:flex;gap:3px;margin-bottom:16px;background:rgba(0,0,0,0.08);padding:3px;border-radius:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tabs{display:flex;gap:3px;margin-bottom:0;background:rgba(0,0,0,0.08);padding:3px;border-radius:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:0;z-index:40;}
 .tabs::-webkit-scrollbar{display:none;}
 .tab{flex:0 0 auto;padding:9px 12px;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:clamp(11px,2.8vw,13px);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;color:var(--cinza);background:transparent;border:none;white-space:nowrap;touch-action:manipulation;}
 .tab.active{background:var(--laranja);color:white;box-shadow:0 2px 10px rgba(232,82,10,0.3);}
 .tab:hover:not(.active){background:rgba(232,82,10,0.1);color:var(--laranja);}
+.main-top-spacer{height:14px;}
 
 /* PANELS */
 .panel{display:none;}.panel.active{display:block;}
@@ -71,47 +95,58 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .field{display:flex;flex-direction:column;gap:5px;min-width:0;}
 .field label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--cinza);}
 .field label .req{color:var(--vermelho);}
+.field label .opt{color:#bbb;font-weight:500;text-transform:none;letter-spacing:0;}
 .field input,.field select,.field textarea{border:2px solid var(--cinza-claro);border-radius:8px;padding:10px 11px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--cinza-escuro);transition:border-color 0.2s;background:#FAFAF8;width:100%;min-width:0;-webkit-appearance:none;appearance:none;}
 .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:10px;background-color:#FAFAF8;padding-right:28px;}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--laranja);background:white;}
 .field textarea{resize:vertical;min-height:74px;}
 .outro-reveal{margin-top:6px;display:none;}
 .outro-reveal.show{display:block;}
+.geo-btn{flex-shrink:0;width:42px;border:2px solid var(--cinza-claro);background:#FAFAF8;border-radius:8px;font-size:16px;cursor:pointer;touch-action:manipulation;}
+.geo-btn:hover{border-color:var(--azul);background:rgba(27,79,138,0.06);}
 
-/* EQUIPE MULTI */
-.equipe-selector{display:flex;gap:8px;flex-wrap:wrap;}
-.equipe-option{border:2px solid var(--cinza-claro);border-radius:8px;padding:9px 14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--cinza);touch-action:manipulation;user-select:none;}
-.equipe-option.selected{border-color:var(--laranja);background:rgba(232,82,10,0.08);color:var(--laranja);}
-.equipe-option .em{font-size:18px;}
-
-/* EQUIPE ENTRIES (multi-row) */
-.equipe-entries{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
-.equipe-entry{display:flex;gap:8px;align-items:flex-end;background:#f9f6f2;border-radius:8px;padding:10px;border:1px solid var(--cinza-claro);}
-.equipe-entry .eq-tipo{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--laranja);background:rgba(232,82,10,0.08);border:1px solid rgba(232,82,10,0.2);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0;}
-.equipe-entry .field{flex:1;}
-.equipe-entry .field label{font-size:10px;}
-.btn-eq-add{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:2px dashed var(--laranja);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--laranja);background:transparent;cursor:pointer;touch-action:manipulation;margin-top:4px;}
-.btn-eq-add:hover{background:rgba(232,82,10,0.07);}
-.btn-eq-rm{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:2px 4px;border-radius:4px;flex-shrink:0;align-self:center;touch-action:manipulation;}
-.btn-eq-rm:hover{color:var(--vermelho);}
-
-/* ÓRGÃOS */
-.orgaos-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.orgao-chip{display:flex;align-items:center;gap:6px;padding:8px 12px;border:2px solid var(--cinza-claro);border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:600;color:var(--cinza);touch-action:manipulation;user-select:none;}
-.orgao-chip.selected{border-color:var(--azul);background:rgba(27,79,138,0.08);color:var(--azul);}
-.orgao-chip .ck{width:16px;height:16px;border-radius:4px;border:2px solid var(--cinza-claro);background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:10px;}
-.orgao-chip.selected .ck{background:var(--azul);border-color:var(--azul);color:white;}
+/* VIATURAS EXTRA */
+.viatura-row{position:relative;}
+.viatura-row + .viatura-row{margin-top:12px;padding-top:12px;border-top:1px dashed var(--cinza-claro);}
+.btn-viatura-add{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;border:2px dashed var(--azul);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--azul);background:transparent;cursor:pointer;touch-action:manipulation;margin-top:10px;}
+.btn-viatura-add:hover{background:rgba(27,79,138,0.06);}
+.btn-viatura-rm{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:6px;border:none;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--vermelho);background:rgba(211,47,47,0.07);cursor:pointer;touch-action:manipulation;margin-top:6px;}
+.btn-viatura-rm:hover{background:rgba(211,47,47,0.14);}
 
 /* SEP */
 .sep{height:1px;background:var(--cinza-claro);margin:13px 0;}
 
-/* ITEM CARDS */
-.infracoes-list{display:flex;flex-direction:column;gap:12px;}
-.infracao-item{background:var(--creme);border:1px solid rgba(232,82,10,0.15);border-radius:10px;padding:14px;}
-.item-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+/* STICKY ADD BAR */
+.sticky-addbar{position:sticky;top:46px;z-index:35;background:#F0EBE3;padding:10px 0 8px;margin:0 0 4px;}
+.add-section{display:flex;flex-wrap:wrap;gap:7px;}
+.btn-add{display:flex;align-items:center;gap:5px;padding:11px 15px;border-radius:10px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;color:#fff;touch-action:manipulation;box-shadow:0 3px 10px rgba(0,0,0,0.18);}
+.btn-add.orange{background:var(--laranja);}
+.btn-add.green{background:var(--verde-escuro);}
+.btn-add.blue{background:var(--azul);}
+.btn-add.red{background:var(--vermelho);}
+.btn-add.yellow{background:#B45309;}
+.btn-add.orange:active{background:#C74208;}
+.btn-add.green:active{background:#1f5c15;}
+.btn-add.blue:active{background:#143e6e;}
+.btn-add.red:active{background:#a82626;}
+.btn-add.yellow:active{background:#8a3d07;}
+
+/* ITEM GROUPS */
+.item-group{margin-bottom:14px;}
+.item-group-header{display:flex;align-items:center;gap:8px;padding:6px 2px;margin-bottom:8px;border-bottom:2px solid var(--cinza-claro);}
+.ig-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.6px;color:var(--cinza-escuro);}
+.ig-count{background:var(--laranja);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px;min-width:20px;text-align:center;}
+.item-group-list{display:flex;flex-direction:column;gap:10px;}
+.empty-state{text-align:center;padding:30px 10px;color:#bbb;font-size:13px;}
+
+/* COLLAPSIBLE ITEM CARDS */
+.infracao-item{background:var(--creme);border:1px solid rgba(232,82,10,0.15);border-radius:10px;overflow:hidden;}
+.item-header{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;touch-action:manipulation;flex-wrap:wrap;}
 .item-num{background:var(--laranja);color:white;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;width:23px;height:23px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.item-tipo{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;color:var(--laranja);flex:1;}
-.tipo-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;padding:2px 8px;border-radius:20px;}
+.item-tipo-wrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+.item-tipo{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--laranja);}
+.item-preview{font-size:11.5px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tipo-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;padding:2px 8px;border-radius:20px;flex-shrink:0;}
 .tag-infracao{background:rgba(232,82,10,0.15);color:var(--laranja);}
 .tag-suv{background:rgba(245,158,11,0.15);color:#92400E;}
 .tag-nva{background:rgba(27,79,138,0.15);color:var(--azul);}
@@ -119,20 +154,21 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .tag-infraestrutura{background:rgba(91,184,42,0.15);color:var(--verde-escuro);}
 .tag-poda{background:rgba(34,197,94,0.15);color:#065F46;}
 .tag-outros{background:rgba(100,100,100,0.15);color:#555;}
-.tag-educativa{background:rgba(91,184,42,0.15);color:var(--verde-escuro);}
-.btn-remove{background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;padding:2px 5px;border-radius:4px;transition:all 0.2s;touch-action:manipulation;}
-.btn-remove:hover{color:var(--vermelho);}
+.item-photo-count{font-size:11px;color:#999;flex-shrink:0;}
+.item-sync{font-size:13px;flex-shrink:0;}
+.item-chevron{font-size:16px;font-weight:800;color:var(--laranja);background:rgba(232,82,10,0.12);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s;}
+.infracao-item.open .item-chevron{transform:rotate(180deg);}
+.btn-remove{background:none;border:none;color:#bbb;font-size:17px;cursor:pointer;padding:3px 6px;border-radius:6px;transition:all 0.2s;touch-action:manipulation;flex-shrink:0;}
+.btn-remove:hover{color:var(--vermelho);background:rgba(211,47,47,0.08);}
+.item-body{display:none;padding:0 14px 14px;}
+.infracao-item.open .item-body{display:block;}
 
 /* FOTO */
 .foto-section{margin-top:13px;}
 .foto-label-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--cinza);margin-bottom:8px;display:block;}
 .foto-grid{display:flex;gap:10px;flex-wrap:wrap;}
-
-/* Each foto item = preview box + two buttons below */
 .foto-item{display:flex;flex-direction:column;gap:5px;align-items:center;flex-shrink:0;}
 .foto-item .foto-num{font-size:10px;font-weight:700;text-transform:uppercase;color:#aaa;letter-spacing:0.5px;}
-
-/* Preview box */
 .foto-preview{position:relative;width:88px;height:88px;border-radius:8px;border:2px dashed var(--cinza-claro);background:#f5f3ef;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
 .foto-preview .fp-icon{font-size:28px;color:#ccc;}
 .foto-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px;display:none;}
@@ -140,28 +176,14 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .foto-preview.has-img .fp-icon{display:none;}
 .foto-preview .fdel{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2;touch-action:manipulation;}
 .foto-preview.has-img .fdel{display:flex;}
-
-/* The two trigger buttons */
+.foto-preview .fsync{position:absolute;bottom:3px;left:3px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;display:none;}
+.foto-preview.has-img .fsync{display:block;}
 .foto-btns{display:flex;gap:4px;width:88px;}
 .foto-btn{flex:1;position:relative;overflow:hidden;border-radius:6px;border:2px solid var(--cinza-claro);background:#fafaf8;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:border-color 0.2s;touch-action:manipulation;}
 .foto-btn:hover{border-color:var(--laranja);background:rgba(232,82,10,0.05);}
 .foto-btn input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border:none;padding:0;background:none;font-size:0;}
 .foto-btn .fb-icon{font-size:16px;line-height:1;}
 .foto-btn .fb-label{font-size:8px;font-weight:700;text-transform:uppercase;color:#aaa;letter-spacing:0.4px;line-height:1;}
-
-/* ADD BUTTONS */
-.add-section{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
-.btn-add{display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:8px;border:2px dashed;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;background:transparent;touch-action:manipulation;}
-.btn-add.orange{border-color:var(--laranja);color:var(--laranja);}
-.btn-add.green{border-color:var(--verde);color:var(--verde-escuro);}
-.btn-add.blue{border-color:var(--azul);color:var(--azul);}
-.btn-add.red{border-color:var(--vermelho);color:var(--vermelho);}
-.btn-add.yellow{border-color:var(--amarelo);color:#B45309;}
-.btn-add.orange:hover{background:rgba(232,82,10,0.07);}
-.btn-add.green:hover{background:rgba(91,184,42,0.07);}
-.btn-add.blue:hover{background:rgba(27,79,138,0.07);}
-.btn-add.red:hover{background:rgba(211,47,47,0.07);}
-.btn-add.yellow:hover{background:rgba(245,158,11,0.07);}
 
 /* COUNTERS */
 .counter-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
@@ -177,7 +199,6 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .counter-box.yellow input{color:#B45309;}.counter-box.red input{color:var(--vermelho);}
 .counter-box.green input{color:var(--verde-escuro);}
 .counter-box .clbl{font-size:clamp(7px,1.8vw,10px);font-weight:600;text-transform:uppercase;color:var(--cinza);margin-top:2px;line-height:1.2;}
-
 .counter-box .cnt-manual-tag{font-size:8px;color:#aaa;font-style:italic;margin-top:2px;cursor:pointer;text-decoration:underline dotted;}
 .counter-box .cnt-manual-tag:hover{color:var(--laranja);}
 .counter-box .cnt-auto-hint{font-size:8px;color:var(--verde-escuro);margin-top:1px;opacity:0.7;}
@@ -187,16 +208,18 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 .obs-textarea:focus{outline:none;border-color:var(--laranja);}
 
 /* ACTION BAR */
-.action-bar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid var(--laranja);padding:8px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 -4px 20px rgba(0,0,0,0.1);z-index:50;flex-wrap:nowrap;}
-.action-bar .stxt{flex:1;font-size:10px;color:var(--cinza);min-width:60px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.action-bar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid var(--laranja);padding:8px 10px;display:flex;align-items:center;gap:5px;box-shadow:0 -4px 20px rgba(0,0,0,0.1);z-index:50;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.action-bar .stxt{flex:1;font-size:10px;color:var(--cinza);min-width:54px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .action-bar .stxt strong{color:var(--laranja);}
-.btn-icon{background:transparent;border:2px solid var(--cinza-claro);padding:8px 10px;border-radius:8px;font-size:14px;cursor:pointer;touch-action:manipulation;white-space:nowrap;color:var(--cinza);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;display:flex;align-items:center;gap:4px;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.2s;}
+.btn-icon{background:transparent;border:2px solid var(--cinza-claro);padding:8px 9px;border-radius:8px;cursor:pointer;touch-action:manipulation;white-space:nowrap;color:var(--cinza);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;display:flex;align-items:center;gap:4px;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.2s;flex-shrink:0;}
 .btn-icon:hover{border-color:var(--cinza);}
 .btn-icon.save{border-color:var(--salvo);color:var(--salvo);}
 .btn-icon.save:hover{background:rgba(5,150,105,0.07);}
 .btn-icon.load{border-color:var(--azul);color:var(--azul);}
 .btn-icon.load:hover{background:rgba(27,79,138,0.07);}
-.btn-primary{background:var(--laranja);color:white;border:none;padding:10px 16px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;touch-action:manipulation;white-space:nowrap;}
+.btn-icon.view{border-color:#8b5cf6;color:#7c3aed;}
+.btn-icon.view:hover{background:rgba(139,92,246,0.07);}
+.btn-primary{background:var(--laranja);color:white;border:none;padding:10px 16px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;touch-action:manipulation;white-space:nowrap;flex-shrink:0;}
 .btn-primary:active{background:#C74208;}
 .btn-verde{background:var(--verde);color:white;border:none;padding:10px 16px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:5px;touch-action:manipulation;white-space:nowrap;}
 .btn-verde:active{background:var(--verde-escuro);}
@@ -211,10 +234,11 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
-.modal{background:white;border-radius:14px;padding:20px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal{background:white;border-radius:14px;padding:20px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:88vh;overflow-y:auto;}
+.modal.modal-wide{max-width:560px;}
 .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;color:var(--cinza-escuro);margin-bottom:12px;}
 .modal p{font-size:14px;color:var(--cinza);line-height:1.5;margin-bottom:16px;}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;}
 .modal-btns button{padding:9px 18px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;cursor:pointer;touch-action:manipulation;}
 .modal-cancel{background:transparent;border:2px solid var(--cinza-claro);color:var(--cinza);}
 .modal-confirm{background:var(--laranja);border:none;color:white;}
@@ -235,7 +259,7 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
   .org-label,.hb-div{display:none;}
   .fg-3{grid-template-columns:1fr 1fr;}.s3{grid-column:span 2;}
   .counter-grid{grid-template-columns:repeat(3,1fr);}
-  .programa-tag{display:none;}
+  .corredor-combo,.programa-combo{flex:1 1 100%;}
 }
 @media(max-width:380px){
   .fg-3,.fg-2{grid-template-columns:1fr;}.s2,.s3{grid-column:span 1;}
@@ -256,9 +280,10 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
     </div>
     <div class="header-title">
       <h1>Registro de Ações em Campo</h1>
-      <div class="sub">Capital Limpa &amp; Ordenada – 4º Ciclo</div>
+      <div class="sub">Fortaleza – via única por relatório</div>
     </div>
     <div class="header-right">
+      <span class="conn-dot" id="conn-dot" title="Status de conexão"></span>
       <div class="clock">
         <div class="time" id="clock-time">--:--</div>
         <div class="date" id="clock-date">--/--/----</div>
@@ -270,18 +295,19 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 <!-- CORREDOR BAR -->
 <div class="corredor-bar">
   <label>Corredor:</label>
-  <select id="corredor-ativo" onchange="onCorredorChange()">
-    <option value="">Selecione a via...</option>
-    <optgroup label="Operação Capital Limpa e Ordenada – 4º Ciclo (28/04–18/05)">
-      <option value="AV. ROGACIANO LEITE">Av. Rogaciano Leite</option>
-      <option value="RUA PORTO VELHO">Rua Porto Velho</option>
-      <option value="AV. JOVITA FEITOSA">Av. Jovita Feitosa</option>
-    </optgroup>
-    <option value="OUTRO">Outro corredor...</option>
-  </select>
-  <input class="corredor-outro" id="corredor-outro" type="text" placeholder="Nome do corredor" oninput="updateSummary()">
-  <span class="programa-tag">● Cap. Limpa &amp; Ordenada · 4º Ciclo · 28/04–18/05</span>
+  <div class="corredor-combo">
+    <input id="corredor-input" type="text" placeholder="Digite para buscar ou criar..." autocomplete="off"
+      oninput="forceUpper(this);onCorredorInput()" onfocus="showCorredorDropdown()" onblur="setTimeout(hideCorredorDropdown,150)">
+    <div class="corredor-dropdown" id="corredor-dropdown"></div>
+  </div>
+  <label>Operação:</label>
+  <div class="programa-combo">
+    <input id="programa-input" type="text" placeholder="Programa / operação (opcional)" autocomplete="off"
+      oninput="forceUpper(this);onProgramaInput()" onfocus="showProgramaDropdown()" onblur="setTimeout(hideProgramaDropdown,150)">
+    <div class="corredor-dropdown" id="programa-dropdown"></div>
+  </div>
   <span class="draft-badge" id="draft-badge">● Rascunho salvo</span>
+  <span class="sync-badge off" id="sync-badge" onclick="onSyncBadgeClick()">⚙ Sincronização não configurada</span>
 </div>
 
 <!-- MAIN -->
@@ -290,27 +316,27 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
     <button class="tab active" onclick="switchTab('ident',this)">👤 Identificação</button>
     <button class="tab" onclick="switchTab('fiscalizacao',this)">🚦 Fiscalização</button>
     <button class="tab" onclick="switchTab('estrutura',this)">🛠️ Infra &amp; Sinalização</button>
-    <button class="tab" onclick="switchTab('edu',this)">🎓 Educação / Outros</button>
-    <button class="tab" onclick="switchTab('resumo',this)">📊 Resumo</button>
+    <button class="tab" onclick="switchTab('obs',this)">📋 Observações / Outros</button>
   </div>
+  <div class="main-top-spacer"></div>
 
   <!-- ══ IDENTIFICAÇÃO ══ -->
   <div class="panel active" id="panel-ident">
 
     <div class="card">
-      <div class="card-title">👤 Coordenador da Equipe</div>
+      <div class="card-title">👤 Coordenador &amp; Viatura</div>
       <div class="fg fg-2">
         <div class="field s2">
           <label>Nome do Coordenador <span class="req">*</span></label>
-          <input type="text" id="nome-agente" placeholder="Nome do coordenador" oninput="updateSummary()">
+          <input type="text" id="nome-agente" placeholder="Nome do coordenador" oninput="forceUpper(this);updateSummary();markDirty()">
         </div>
         <div class="field">
           <label>Matrícula</label>
-          <input type="text" id="matricula" placeholder="N° matrícula">
+          <input type="text" id="matricula" placeholder="N° matrícula" oninput="forceUpper(this);markDirty()">
         </div>
         <div class="field">
           <label>Turno <span class="req">*</span></label>
-          <select id="turno" onchange="updateSummary()">
+          <select id="turno" onchange="updateSummary();markDirty()">
             <option value="">Selecione...</option>
             <option>Manhã (6h–12h)</option>
             <option>Tarde (12h–18h)</option>
@@ -318,38 +344,19 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
           </select>
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🚗 Composição da Equipe</div>
-      <p style="font-size:12px;color:#888;margin-bottom:10px">Selecione o(s) tipo(s) e clique para adicionar entradas de equipe:</p>
-      <div class="equipe-selector">
-        <button class="btn-eq-add" onclick="addEquipeEntry('VT')"><span>🚙</span> + Viatura (VT)</button>
-        <button class="btn-eq-add" onclick="addEquipeEntry('MT')"><span>🏍️</span> + Motocicleta (MT)</button>
-        <button class="btn-eq-add" onclick="addEquipeEntry('SUP')"><span>📋</span> + Supervisão</button>
-        <button class="btn-eq-add" onclick="addEquipeEntry('OUTRO')"><span>➕</span> + Outro</button>
-      </div>
-      <div class="equipe-entries" id="equipe-entries"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🤝 Órgãos Presentes na Ação</div>
-      <p style="font-size:12px;color:#888;margin-bottom:12px">Selecione todos os órgãos que participaram da ação conjunta neste turno:</p>
-      <div class="orgaos-grid">
-        <div class="orgao-chip" onclick="toggleOrgao(this,'AGEFIS')"><div class="ck">✓</div>AGEFIS</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'SEUMA')"><div class="ck">✓</div>SEUMA</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'SCSP')"><div class="ck">✓</div>SCSP</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'SEINF')"><div class="ck">✓</div>SEINF</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'GMF')"><div class="ck">✓</div>GMF</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'SEGOV/COPIFOR')"><div class="ck">✓</div>SEGOV/COPIFOR</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'SME')"><div class="ck">✓</div>SME</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'VEREADORES')"><div class="ck">✓</div>Vereadores</div>
-        <div class="orgao-chip" onclick="toggleOrgao(this,'AMC')"><div class="ck">✓</div>AMC</div>
-      </div>
       <div class="sep"></div>
-      <div class="field">
-        <label>Outros órgãos presentes</label>
-        <input type="text" id="orgaos-outros" placeholder="Ex: Defesa Civil, Enel, CAGECE..." oninput="updateSummary()">
+      <div id="viaturas-container"></div>
+      <button type="button" class="btn-viatura-add" onclick="addViaturaExtra()">🚙 + Adicionar outra viatura da AMC</button>
+      <div class="sep"></div>
+      <div class="fg fg-2">
+        <div class="field">
+          <label>Viatura de apoio <span class="opt">(outro órgão, opcional)</span></label>
+          <input type="text" id="apoio-viatura" placeholder="Ex: GMF-12..." oninput="forceUpper(this);updateSummary();markDirty()">
+        </div>
+        <div class="field">
+          <label>Componentes do apoio <span class="opt">(opcional)</span></label>
+          <input type="text" id="apoio-componentes" placeholder="Nomes dos agentes parceiros" oninput="forceUpper(this);updateSummary();markDirty()">
+        </div>
       </div>
     </div>
 
@@ -358,15 +365,15 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
       <div class="fg fg-3">
         <div class="field">
           <label>Data <span class="req">*</span></label>
-          <input type="date" id="data-oc" oninput="updateSummary()">
+          <input type="date" id="data-oc" oninput="updateSummary();markDirty()">
         </div>
         <div class="field">
           <label>Hora de início <span class="req">*</span></label>
-          <input type="time" id="hora-ini" oninput="updateSummary();validarHorario()">
+          <input type="time" id="hora-ini" oninput="updateSummary();validarHorario();markDirty()">
         </div>
         <div class="field">
           <label>Hora de encerramento</label>
-          <input type="time" id="hora-fim" oninput="validarHorario()">
+          <input type="time" id="hora-fim" oninput="validarHorario();markDirty()">
         </div>
       </div>
     </div>
@@ -375,87 +382,53 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
 
   <!-- ══ FISCALIZAÇÃO ══ -->
   <div class="panel" id="panel-fiscalizacao">
-    <div class="card">
-      <div class="card-title">🚨 Totalizadores</div>
-      <div class="counter-grid">
-        <div class="counter-box orange"><input type="number" id="cnt-aut" min="0" value="0" oninput="updateSummary()"><div class="clbl">Autuações</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
-        <div class="counter-box blue"><input type="number" id="cnt-nva" min="0" value="0" oninput="updateSummary()"><div class="clbl">NVA</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
-        <div class="counter-box yellow"><input type="number" id="cnt-suv" min="0" value="0" oninput="updateSummary()"><div class="clbl">SUV</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
-        <div class="counter-box red"><input type="number" id="cnt-rem" min="0" value="0" oninput="updateSummary()"><div class="clbl">Remoções</div></div>
-        <div class="counter-box green"><input type="number" id="cnt-ori" min="0" value="0" oninput="updateSummary()"><div class="clbl">Orientações</div></div>
-      </div>
-      <div class="sep"></div>
-      <div id="list-fiscalizacao" class="infracoes-list"></div>
+    <div class="sticky-addbar">
       <div class="add-section">
         <button class="btn-add orange" onclick="addItem('infracao')">+ Infração de Trânsito</button>
         <button class="btn-add yellow" onclick="addItem('suv')">+ SUV</button>
         <button class="btn-add blue" onclick="addItem('nva')">+ NVA (Veículo Abandonado)</button>
       </div>
     </div>
+    <div id="list-fiscalizacao"></div>
+    <div class="empty-state" id="empty-fiscalizacao">Nenhum registro ainda. Use os botões acima para adicionar.</div>
   </div>
 
   <!-- ══ INFRA & SINALIZAÇÃO ══ -->
   <div class="panel" id="panel-estrutura">
-    <div class="card">
-      <div class="card-title">🚧 Infraestrutura &amp; Sinalização</div>
-      <div id="list-estrutura" class="infracoes-list"></div>
+    <div class="sticky-addbar">
       <div class="add-section">
         <button class="btn-add red"    onclick="addItem('sinalizacao')">+ Sinalização</button>
-        <button class="btn-add orange" onclick="addItem('buraco')">+ Buraco / Pavimento</button>
-        <button class="btn-add green"  onclick="addItem('poda')">+ Poda / Vegetação</button>
-        <button class="btn-add blue"   onclick="addItem('infraestrutura')">+ Infra Geral</button>
+        <button class="btn-add green"  onclick="addItem('infraestrutura')">+ Infraestrutura / Pavimento</button>
+        <button class="btn-add blue"   onclick="addItem('poda')">+ Poda / Vegetação</button>
         <button class="btn-add yellow" onclick="addItem('iluminacao')">+ Iluminação</button>
       </div>
     </div>
+    <div id="list-estrutura"></div>
+    <div class="empty-state" id="empty-estrutura">Nenhum registro ainda. Use os botões acima para adicionar.</div>
   </div>
 
-  <!-- ══ EDUCAÇÃO / OUTROS ══ -->
-  <div class="panel" id="panel-edu">
-    <div class="card">
-      <div class="card-title">🎓 Educação e Orientação</div>
-      <div id="list-educacao" class="infracoes-list"></div>
-      <div class="add-section">
-        <button class="btn-add green"  onclick="addItem('educativa')">+ Ação Educativa / Orientação</button>
-        <button class="btn-add blue"   onclick="addItem('apoio')">+ Apoio a Órgão Parceiro</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">📋 Outros Registros</div>
-      <div id="list-outros" class="infracoes-list"></div>
+  <!-- ══ OBSERVAÇÕES / OUTROS ══ -->
+  <div class="panel" id="panel-obs">
+    <div class="sticky-addbar">
       <div class="add-section">
         <button class="btn-add orange" onclick="addItem('abordagem')">+ Abordagem / Ocorrência</button>
         <button class="btn-add yellow" onclick="addItem('outros')">+ Outros</button>
       </div>
     </div>
+    <div id="list-outros"></div>
+    <div class="empty-state" id="empty-outros">Nenhum registro ainda. Use os botões acima para adicionar.</div>
     <div class="card">
       <div class="card-title">📝 Observações Gerais do Turno</div>
-      <textarea class="obs-textarea" id="obs-gerais" placeholder="Relate situações relevantes, intercorrências, condições do trecho, dificuldades encontradas, necessidade de reforço..."></textarea>
+      <textarea class="obs-textarea" id="obs-gerais" placeholder="Relate situações relevantes, intercorrências, condições do trecho, dificuldades encontradas, necessidade de reforço..." oninput="forceUpper(this);markDirty()"></textarea>
     </div>
   </div>
 
-  <!-- ══ RESUMO ══ -->
-  <div class="panel" id="panel-resumo">
-    <div class="card">
-      <div class="card-title">📊 Resumo do Registro</div>
-      <div id="resumo-content"><p style="color:#aaa;font-size:14px;text-align:center;padding:28px 0">Clique em "Atualizar Resumo" para visualizar.</p></div>
-    </div>
-    <div class="card">
-      <div class="card-title">✅ Confirmação e Geração</div>
-      <div class="fg fg-1" style="gap:11px">
-        <div class="field"><label>Assinatura / Confirmação</label><input type="text" id="assinatura" placeholder="Nome completo para confirmar o registro"></div>
-        <div class="field"><label>Observação final</label><textarea id="obs-final" rows="3" placeholder="Informação adicional..."></textarea></div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="gerarPDF()">📄 Gerar Relatório PDF</button>
-        <button class="btn-verde" onclick="buildSummary()">🔄 Atualizar Resumo</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ACTION BAR -->
 <div class="action-bar">
   <div class="stxt" id="status-bar">Preencha a identificação.</div>
+  <button class="btn-icon view" onclick="abrirModal('resumo')" title="Ver resumo">👁 <span>Resumo</span></button>
   <button class="btn-icon save" onclick="salvarRascunho()" title="Salvar rascunho">💾 <span>Salvar</span></button>
   <button class="btn-icon load" onclick="abrirModal('load')" title="Carregar rascunho">📂 <span>Carregar</span></button>
   <button class="btn-icon" onclick="confirmarLimpar()" title="Limpar tudo">🗑</button>
@@ -488,7 +461,36 @@ body{font-family:'Barlow',sans-serif;background:#F0EBE3;min-height:100vh;color:v
   </div>
 </div>
 
+<!-- MODAL RESUMO -->
+<div class="modal-overlay" id="modal-resumo">
+  <div class="modal modal-wide">
+    <div class="modal-title">📊 Resumo do Registro</div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:7px">Totalizadores</div>
+    <div class="counter-grid">
+      <div class="counter-box orange"><input type="number" id="cnt-aut" min="0" value="0" oninput="updateSummary();markDirty()"><div class="clbl">Autuações</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
+      <div class="counter-box blue"><input type="number" id="cnt-nva" min="0" value="0" oninput="updateSummary();markDirty()"><div class="clbl">NVA</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
+      <div class="counter-box yellow"><input type="number" id="cnt-suv" min="0" value="0" oninput="updateSummary();markDirty()"><div class="clbl">SUV</div><div class="cnt-auto-hint">&#x25CF; auto</div></div>
+      <div class="counter-box red"><input type="number" id="cnt-rem" min="0" value="0" oninput="updateSummary();markDirty()"><div class="clbl">Remoções</div></div>
+      <div class="counter-box green"><input type="number" id="cnt-ori" min="0" value="0" oninput="updateSummary();markDirty()"><div class="clbl">Orientações</div></div>
+    </div>
+    <div id="resumo-content"><p style="color:#aaa;font-size:14px;text-align:center;padding:14px 0">Carregando...</p></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="fecharModal('resumo')">Fechar</button>
+      <button class="btn-primary" onclick="gerarPDF()">📄 Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ════════════════════════════════════════════════════════
+// CONFIGURAÇÃO — preencha após publicar o Apps Script (Code.gs)
+// ════════════════════════════════════════════════════════
+const CONFIG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzqopLFn8pl-P4r11TXAUgRB-Y-E9We9XnNv0xgaOXWTCsxHz3O5tOkslVLod3wa28F/exec',
+  SYNC_DEBOUNCE_MS: 6000,
+  SYNC_RETRY_MS: 30000
+};
+
 // ── UTILS ──
 function pad(n){return String(n).padStart(2,'0');}
 function gv(id){const e=document.getElementById(id);return e?e.value.trim()||'—':'—';}
@@ -496,8 +498,18 @@ function showToast(msg,type=''){
   const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'');
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
 }
+// Força maiúsculas em qualquer campo de texto livre, preservando a posição do cursor.
+function forceUpper(el){
+  if(!el)return;
+  const start=el.selectionStart,end=el.selectionEnd;
+  const upper=el.value.toUpperCase();
+  if(upper!==el.value){
+    el.value=upper;
+    if(start!=null && el.setSelectionRange){try{el.setSelectionRange(start,end);}catch(e){}}
+  }
+}
 
-// ── CLOCK ──
+// ── CLOCK & CONNECTION ──
 function updateClock(){
   const n=new Date();
   document.getElementById('clock-time').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
@@ -505,24 +517,34 @@ function updateClock(){
 }
 updateClock();setInterval(updateClock,1000);
 
+function updateConnDot(){
+  const d=document.getElementById('conn-dot');
+  d.classList.toggle('online',navigator.onLine);
+  d.classList.toggle('offline',!navigator.onLine);
+}
+window.addEventListener('online',()=>{updateConnDot();attemptSync();});
+window.addEventListener('offline',updateConnDot);
+
 window.addEventListener('load',()=>{
   const n=new Date();
   document.getElementById('data-oc').value=n.toISOString().slice(0,10);
   document.getElementById('hora-ini').value=pad(n.getHours())+':'+pad(n.getMinutes());
   checkAutoSave();
+  updateConnDot();
+  document.getElementById('viaturas-container').appendChild(renderViaturaRow(null));
+  loadCorredorCache();
+  loadProgramaCache();
+  fetchCorredoresFromBackend();
+  fetchProgramasFromBackend();
+  updateSyncBadge();
 
-// ── BLOQUEIO PULL-TO-REFRESH (mobile) ──
-// Impede o gesto de arrastar para baixo recarregar a página,
-// mas preserva o scroll vertical normal
-let _ptStartY=0;
-document.addEventListener('touchstart',e=>{_ptStartY=e.touches[0].clientY;},{passive:true});
-document.addEventListener('touchmove',e=>{
-  const dy=e.touches[0].clientY-_ptStartY;
-  // Só bloqueia se estiver no topo da página E arrastando para baixo
-  if(dy>0&&(window.scrollY||document.documentElement.scrollTop)===0){
-    e.preventDefault();
-  }
-},{passive:false});
+  // BLOQUEIO PULL-TO-REFRESH (mobile)
+  let _ptStartY=0;
+  document.addEventListener('touchstart',e=>{_ptStartY=e.touches[0].clientY;},{passive:true});
+  document.addEventListener('touchmove',e=>{
+    const dy=e.touches[0].clientY-_ptStartY;
+    if(dy>0&&(window.scrollY||document.documentElement.scrollTop)===0){e.preventDefault();}
+  },{passive:false});
 });
 
 // ── TABS ──
@@ -531,81 +553,231 @@ function switchTab(name,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   if(el)el.classList.add('active');
-  if(name==='resumo')buildSummary();
 }
 
-// ── CORREDOR ──
-function onCorredorChange(){
-  const sel=document.getElementById('corredor-ativo');
-  const inp=document.getElementById('corredor-outro');
-  inp.style.display=sel.value==='OUTRO'?'block':'none';
-  if(sel.value!=='OUTRO')inp.value='';
-  updateSummary();
+// ── PROGRAMA / OPERAÇÃO (combobox com biblioteca compartilhada, igual ao corredor) ──
+let programaLib=[];
+const PROGRAMA_CACHE_KEY='amc_programas_cache';
+function loadProgramaCache(){
+  try{programaLib=JSON.parse(localStorage.getItem(PROGRAMA_CACHE_KEY)||'[]');}catch(e){programaLib=[];}
 }
-function getCorreedor(){
-  const s=document.getElementById('corredor-ativo').value;
-  if(s==='OUTRO'){const o=document.getElementById('corredor-outro').value.trim();return o||'Outro corredor';}
-  return s||'—';
+function saveProgramaCache(){try{localStorage.setItem(PROGRAMA_CACHE_KEY,JSON.stringify(programaLib));}catch(e){}}
+function fetchProgramasFromBackend(){
+  if(!CONFIG.SCRIPT_URL)return;
+  fetch(CONFIG.SCRIPT_URL+'?action=getProgramas').then(r=>r.json()).then(res=>{
+    if(res&&res.ok&&Array.isArray(res.programas)){
+      programaLib=Array.from(new Set([...programaLib,...res.programas])).sort((a,b)=>a.localeCompare(b));
+      saveProgramaCache();
+    }
+  }).catch(()=>{});
+}
+function onProgramaInput(){updateSummary();markDirty();renderProgramaDropdown();}
+function renderProgramaDropdown(){
+  const q=document.getElementById('programa-input').value.trim().toLowerCase();
+  const dd=document.getElementById('programa-dropdown');
+  const matches=programaLib.filter(c=>c.toLowerCase().includes(q));
+  let html='';
+  matches.slice(0,8).forEach(c=>{html+=`<div class="cd-item" onmousedown="selectPrograma('${c.replace(/'/g,"\\'")}')">${c}</div>`;});
+  if(q&&!programaLib.some(c=>c.toLowerCase()===q)){
+    const raw=document.getElementById('programa-input').value.trim();
+    html+=`<div class="cd-item cd-new" onmousedown="addNovoPrograma()">+ Adicionar "${raw}" como nova operação</div>`;
+  }
+  dd.innerHTML=html||'<div class="cd-empty">Nenhuma operação salva ainda. Digite para criar uma nova.</div>';
+}
+function showProgramaDropdown(){renderProgramaDropdown();document.getElementById('programa-dropdown').classList.add('show');}
+function hideProgramaDropdown(){document.getElementById('programa-dropdown').classList.remove('show');}
+function selectPrograma(nome){
+  document.getElementById('programa-input').value=nome;
+  hideProgramaDropdown();updateSummary();markDirty();
+}
+function addNovoPrograma(){
+  const nome=document.getElementById('programa-input').value.trim();
+  if(!nome)return;
+  if(!programaLib.includes(nome)){programaLib.push(nome);programaLib.sort((a,b)=>a.localeCompare(b));saveProgramaCache();}
+  hideProgramaDropdown();updateSummary();markDirty();
+  syncNovoPrograma(nome);
+}
+function syncNovoPrograma(nome){
+  if(!CONFIG.SCRIPT_URL)return;
+  fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'addPrograma',payload:{nome}})}).catch(()=>{});
 }
 
-// ── EQUIPE MULTI-ENTRY ──
-let equipeEntries=[];let eqCtr=0;
-const equipeTipos={
-  VT:{label:'Viatura (VT)',icon:'🚙',prefix:'VT-'},
-  MT:{label:'Motocicleta (MT)',icon:'🏍️',prefix:'MT-'},
-  SUP:{label:'Supervisão',icon:'📋',prefix:'SUP-'},
-  OUTRO:{label:'Outro',icon:'➕',prefix:''}
-};
-function addEquipeEntry(tipo){
-  const id=++eqCtr;
-  equipeEntries.push({id,tipo});
-  const meta=equipeTipos[tipo]||{label:tipo,icon:'➕',prefix:''};
-  const container=document.getElementById('equipe-entries');
+// ── CORREDOR (combobox com biblioteca compartilhada) ──
+let corredorLib=[];
+const CORREDOR_CACHE_KEY='amc_corredores_cache';
+function loadCorredorCache(){
+  try{corredorLib=JSON.parse(localStorage.getItem(CORREDOR_CACHE_KEY)||'[]');}catch(e){corredorLib=[];}
+}
+function saveCorredorCache(){try{localStorage.setItem(CORREDOR_CACHE_KEY,JSON.stringify(corredorLib));}catch(e){}}
+function fetchCorredoresFromBackend(){
+  if(!CONFIG.SCRIPT_URL)return;
+  fetch(CONFIG.SCRIPT_URL+'?action=getCorredores').then(r=>r.json()).then(res=>{
+    if(res&&res.ok&&Array.isArray(res.corredores)){
+      corredorLib=Array.from(new Set([...corredorLib,...res.corredores])).sort((a,b)=>a.localeCompare(b));
+      saveCorredorCache();
+    }
+  }).catch(()=>{});
+}
+function onCorredorInput(){updateSummary();markDirty();renderCorredorDropdown();}
+function renderCorredorDropdown(){
+  const q=document.getElementById('corredor-input').value.trim().toLowerCase();
+  const dd=document.getElementById('corredor-dropdown');
+  const matches=corredorLib.filter(c=>c.toLowerCase().includes(q));
+  let html='';
+  matches.slice(0,8).forEach(c=>{html+=`<div class="cd-item" onmousedown="selectCorredor('${c.replace(/'/g,"\\'")}')">${c}</div>`;});
+  if(q&&!corredorLib.some(c=>c.toLowerCase()===q)){
+    const raw=document.getElementById('corredor-input').value.trim();
+    html+=`<div class="cd-item cd-new" onmousedown="addNovoCorredor()">+ Adicionar "${raw}" como novo corredor</div>`;
+  }
+  dd.innerHTML=html||'<div class="cd-empty">Nenhum corredor salvo ainda. Digite para criar um novo.</div>';
+}
+function showCorredorDropdown(){renderCorredorDropdown();document.getElementById('corredor-dropdown').classList.add('show');}
+function hideCorredorDropdown(){document.getElementById('corredor-dropdown').classList.remove('show');}
+function selectCorredor(nome){
+  document.getElementById('corredor-input').value=nome;
+  hideCorredorDropdown();updateSummary();markDirty();
+}
+function addNovoCorredor(){
+  const nome=document.getElementById('corredor-input').value.trim();
+  if(!nome)return;
+  if(!corredorLib.includes(nome)){corredorLib.push(nome);corredorLib.sort((a,b)=>a.localeCompare(b));saveCorredorCache();}
+  hideCorredorDropdown();updateSummary();markDirty();
+  syncNovoCorredor(nome);
+}
+function syncNovoCorredor(nome){
+  if(!CONFIG.SCRIPT_URL)return;
+  fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'addCorredor',payload:{nome}})}).catch(()=>{});
+}
+function getCorreedor(){return document.getElementById('corredor-input').value.trim()||'—';}
+
+// ── DADOS PARA AUTOCOMPLETE (agentes e viaturas) ──
+const AGENTES_LIST = ["A. MENEZES", "A. MORAIS", "A. RODRIGUES", "A. TEIXEIRA", "ABREU", "ACENIO", "ADA", "ADAILTON", "ADNA", "ADRIANA", "AFONSO", "AGAMENON", "AIRTON", "ALBERTO", "ALBERTO FILHO", "ALBUQUERQUE", "ALCANTARA", "ALENCAR", "ALEX", "ALEXANDRA MELO", "ALINE", "ALISSON", "ALLAN", "ALMEIDA", "ALMEIDA JUNIOR", "ALUIZIO", "ALVES", "AMELIA", "AMILCAR", "ANA", "ANA CLAUDIA", "ANACLETA", "ANASTACIO", "ANDRADE", "ANDRE", "ANDRE LUIS", "ANDRE OLIVEIRA", "ANDREA", "ANDREZA", "ANNE", "ANSELMO", "ANTONIO(PLINIO)", "AQUILES", "AQUINO", "ARANDA", "ARAUJO", "ARILTON", "ARISTIDES", "ARNALDO", "ARNOLDO", "ARRUDA", "ARTUR", "ARY", "AUGUSTO", "AZEVEDO", "B. FERREIRA", "BAIMA", "BARBOSA", "BARREIRA", "BARRETO", "BARROS", "BARROSO", "BERKSON", "BERNADETE", "BERNARDO", "BESSA", "BIANCA", "BISPO", "BOCHENEK", "BOMFIM", "BONIFACIO", "BRASIL", "BRENO", "BRITO", "BRUNA", "BYRON", "C. CUNHA", "CAETANO", "CALDAS", "CAMPOS", "CANDEA", "CANITO", "CARDEC", "CARLA RAQUEL", "CARLOS JUNIOR", "CARNEIRO", "CAROLINA", "CARVALHO", "CESAR", "CEZANILDO", "CHAVES", "CIBELY", "CILMA", "CINTIA GARCIA", "CIRO", "CLARICIANE", "CLAUDENES", "CLAUDIA", "CLAUDIA ANDREA", "CLAUDINO", "CLAUDIO", "CLAUDNILSON", "CLEBIO", "CLECIANO", "CLEITON", "CONCEICAO", "CORREIA", "COSMO", "COSTA", "CRIS", "CRUZ", "DALINY", "DAMASCENO", "DANIEL", "DANIELLI PAZ", "DANTAS", "DARIO", "DAVID", "DE MORAIS", "DEHON", "DELANO", "DELMA", "DEMETRIO", "DENISE", "DIANA", "DIAS", "DIEGO", "DIOGO", "DJALMA", "DUARTE", "DULCE", "E. COSTA", "EDIAN", "EDNARDO", "EDNILSON", "EDSON", "EDVANDO NUNES", "ELEINA", "EMERSON ANDRADE", "EMILIO CARLOS", "ENEAS", "EREMYLTO", "ERIC", "ERISTON", "ERMESON", "EUCLIDES", "EVANDRO", "EVANDRO SILVA", "EVELINE", "EVELYN", "EWERTON", "F. ALENCAR", "F. ROLIM", "F. SOUZA", "F. SANTOS", "F. VIANA", "FABIANO", "FABIO AUGUSTO", "FABRICIO", "FACANHA", "FACO", "FARIAS", "FATIMA", "FELIX", "FERNANDES", "FERNANDO", "FERREIRA", "FERRO", "FLAVIANA", "FLAVIO", "FLAVIO ANTONIO", "FONSECA", "FONTELES", "FONTENELE", "FRANCA", "FRANCINETE", "FRANCISCO", "FRANCISCO ANTONIO", "FREIRE", "FROTA", "FURTADO", "G. ROCHA", "G. SOUSA", "G. TAVARES", "GABRIEL", "GABRIEL OLIVEIRA", "GADELHA", "GALBERE", "GALVAO", "GARCIA", "GASPAR", "GEOVANA", "GEOVANILDO", "GERALDO BORGES", "GERARDO", "GERCIONE", "GILBERT", "GILSON", "GILVAN", "GLEDSON", "GLEYCIANE", "GOES", "GONCALO", "GUEDES", "GUILHERME", "GURGEL", "GUSTAVO", "HARIADYNNE", "HEBERFRAN", "HELANO", "HELDER", "HELIO", "HELLEN", "HENRIQUE", "HERBERT", "HERMES", "HERNANDO", "HILDA", "HONORATO", "HORANA", "IARA", "IEDA", "IGOR", "INACIO", "INES", "IRACEMA", "IRI GONCALVES", "ISIS", "ISRAEL", "IURY", "IVANILTON", "IZABEL", "J. PORTELA", "J. LOPES", "J. MARCELO", "J. MARQUES", "J. PEIXOTO", "J. SALES", "J. VASCONCELOS", "JAC MARREIRO", "JACELIO", "JACQUELINE", "JADSON", "JALES", "JAMILLY", "JANCEY", "JANNE", "JEFFERSON", "JESOINA", "JESSE", "JOAMARO", "JOANA", "JOAO AVELINO", "JOAO BEZERRA", "JOAO BOSCO", "JOAO DE DEUS", "JOAO FILHO", "JOAO GOMES", "JOAO MARCOS", "JOAO PAULO", "JOAO RAMOS", "JOAO RODRIGUES", "JOAO SIRZINA", "JOAO VICTOR", "JONATHAN", "JORGE", "JORGE UCHOA", "JOSE CARLOS", "JOSE COSTA", "JOSE EDMAR", "JOSE NETO", "JOSE RICARDO", "JOSIANE", "JULIA", "JULIAO", "JULIO MORAIS", "JUNIOR", "JUSCIE", "JUSTINO", "KAMILA", "KARINY", "KATIA", "KATIA MAIA", "KATIGEANE", "KELBER", "KLEBER", "L ALVES", "L. MOTA", "LARA", "LEANDRO", "LEILA", "LEONARDO LEITE", "LETICIA", "LEVILTON", "LIMA", "LINCOLN", "LINDEMBERG", "LINHARES", "LINS", "LOBO", "LOPES", "LOUREIRO", "LUANA", "LUCAS", "LUCAS MARTINS", "LUCAS MOURA", "LUCELIO", "LUCENA", "LUCIANA", "LUCIANO", "LUIZ MESQUITA", "LUIZ SILVA", "LUIZ TELES", "LUIZ TIAGO", "LUZ", "M. ALEXANDRE", "M. ANJOS", "M. COSTA", "M. JUNIOR", "M. OLIVEIRA", "M. RODRIGUES", "MACEDO", "MACHADO", "MAGALHAES", "MAGNO", "MANOEL", "MARCELO", "MARCILIO", "MARCOS ANTONIO", "MARDEN", "MARDIA", "MARIA", "MARIA CRISTINA", "MARIANA", "MARIO", "MARQUES", "MARTINS", "MAURO", "MEDEIROS", "MELO", "MENDES", "MENDONCA", "MICHEL", "MIRANDA", "MIRELLA", "MONTEIRO", "MOREIRA", "MORENO", "MOURA", "NARCELIO", "NASCIMENTO", "NATALIA", "NATALIA FIRMINO", "NATALIA MONTEIRO", "NATHANAELY", "NAZARENO", "NELSON", "NESTOR", "NOGUEIRA", "NOJOSA", "NUBIA", "NUNES", "OLAVO JUNIOR", "OLINDA", "OLIVEIRA", "ONAILIA", "OSMAR", "OTAVIO", "P. NOGUEIRA", "PABLO", "PAULA", "PAULINO", "PAULO ARAUJO", "PAULO CESAR", "PAULO REGIS", "PAULO SERGIO", "PEDRO", "PEDRO IVO", "PEIXOTO", "PEREIRA", "PEREZ", "PEROTE", "PESSOA", "PETRUS", "PINHEIRO", "PONTES", "PORTELA", "QUIXADA", "R. BRAGA", "R. FERREIRA", "R. FILHO", "R. GUEDES", "R. MONTEIRO", "R. SALES", "R. SILVA", "RABELO", "RADSON", "RAFAEL", "RAMON", "RAMOS", "RAQUEL", "RAUNILO", "REGINALDO", "REGNO", "RENATA", "RENATA FLORENCIO", "RENATO BEZERRA", "RENATO TORRES", "RENNER", "RIBEIRO", "RICARDO JORGE", "ROBENYLSON", "ROBERT", "ROBERTA", "ROBERTO", "ROBERTO FELIX", "ROBSON", "ROCHA", "RODRIGO", "RODRIGO RIGE", "ROGERIO GOMES", "ROLIM", "ROME", "ROMELIA", "ROMMEL", "RONALDDY", "RONALDO", "ROOSEWELT", "ROSENO", "RUBERVAL", "RYAD", "S. ARAUJO", "S. ALVES", "S. COSTA", "SABOIA", "SALDANHA", "SALES", "SAMARA", "SAMPAIO", "SAMUEL", "SANDRA", "SANTOS", "SARA", "SARAIVA", "SERGIO", "SEVERO", "SHARLES", "SILAS", "SILVA", "SIPAUBA", "SOCORRO TEIXEIRA", "SOLON", "SOUZA", "SOUZA LIMA", "SULINO", "SYNTIA MEIRELES", "T. OLIVEIRA", "TAIS TAVARES", "TALES", "TALITA", "TARCISIO", "TARCISIO FILHO", "TAUANNE", "TAUMATURGO", "TAVARES", "TEIXEIRA", "TELES", "TEMISTOCLES", "TEMOTEO", "THAIS", "THAYMISSA", "TICIANO", "TORRES", "TRAJANO", "UCHOA", "UNIAS", "V. MARTINS", "V. NUNES", "VALDETARIO", "VANESSA", "VASCONCELOS", "VENICIO SALES", "VENTURA", "VIANA NETO", "VILMA", "VINICIUS", "VIRGINIA", "VITORINO", "VIVIANE", "VLADIA", "WALDEMBERG", "WANDERSON", "WASHINGTON", "WASHINGTON LUIS", "WELBER", "WELLINGTON", "WERBENA", "WESLEY", "WLADIEL", "XAVIER", "YVES"];
+const VEICULO_PREFIXES = (function(){
+  const arr=[];
+  for(let i=150;i<=250;i++)arr.push('VT-'+i);
+  for(let i=150;i<=250;i++)arr.push('MT-'+i);
+  return arr;
+})();
+
+// ── EQUIPE / VIATURAS (autocomplete + suporte a mais de uma viatura por relatório) ──
+function acFieldHTML(id,type,label,placeholder){
+  return`<div class="field"><label>${label}</label>
+    <div class="ac-wrap">
+      <input type="text" id="${id}" placeholder="${placeholder}" autocomplete="off" data-ac="${type}"
+        oninput="forceUpper(this);onAcInput(this)" onfocus="onAcFocus(this)" onblur="onAcBlur(this)">
+      <div class="ac-dropdown" id="${id}-dd"></div>
+    </div></div>`;
+}
+function acSource(type){return type==='veiculo'?VEICULO_PREFIXES:AGENTES_LIST;}
+function getAcQuery(el){
+  if(el.dataset.ac==='agentes'){
+    const parts=el.value.split(',');
+    return parts[parts.length-1].trim();
+  }
+  return el.value.trim();
+}
+function onAcInput(el){updateSummary();markDirty();renderAcDropdown(el);}
+function onAcFocus(el){renderAcDropdown(el);}
+function onAcBlur(el){
+  setTimeout(()=>{
+    const dd=document.getElementById(el.id+'-dd');if(dd)dd.classList.remove('show');
+    // só remove a vírgula sobrando se o campo realmente perdeu o foco
+    // (evita apagar a vírgula automática logo após escolher uma sugestão)
+    if(document.activeElement!==el && el.dataset.ac==='agentes')el.value=el.value.replace(/,\s*$/,'');
+  },150);
+}
+function renderAcDropdown(el){
+  const dd=document.getElementById(el.id+'-dd');if(!dd)return;
+  const q=getAcQuery(el).toLowerCase();
+  if(!q){dd.innerHTML='';dd.classList.remove('show');return;}
+  const source=acSource(el.dataset.ac);
+  let matches=el.dataset.ac==='agentes'
+    ? source.filter(s=>s.toLowerCase().startsWith(q))
+    : source.filter(s=>s.toLowerCase().includes(q));
+  matches=matches.slice().sort((a,b)=>a.localeCompare(b,'pt-BR')).slice(0,8);
+  if(!matches.length){dd.innerHTML='';dd.classList.remove('show');return;}
+  dd.innerHTML=matches.map(m=>`<div class="cd-item" onmousedown="event.preventDefault();selectAcOption('${el.id}','${m.replace(/'/g,"\\'")}')">${m}</div>`).join('');
+  dd.classList.add('show');
+}
+function selectAcOption(inputId,value){
+  const el=document.getElementById(inputId);if(!el)return;
+  if(el.dataset.ac==='agentes'){
+    let parts=el.value.split(',').map(p=>p.trim());
+    parts[parts.length-1]=value;
+    el.value=parts.filter(Boolean).join(', ')+', ';
+  }else{
+    el.value=value;
+  }
+  const dd=document.getElementById(inputId+'-dd');if(dd)dd.classList.remove('show');
+  updateSummary();markDirty();el.focus();
+}
+
+let equipeExtraIds=[];
+let equipeExtraCtr=0;
+function viaturaFieldIds(suffix){
+  return suffix?{p:'viatura-prefixo-x'+suffix,c:'equipe-componentes-x'+suffix}:{p:'viatura-prefixo',c:'equipe-componentes'};
+}
+function renderViaturaRow(suffix){
+  const ids=viaturaFieldIds(suffix);
   const div=document.createElement('div');
-  div.className='equipe-entry';div.id='eq-'+id;
-  div.innerHTML=`
-    <span class="eq-tipo">${meta.icon} ${meta.label}</span>
-    ${tipo==='OUTRO'?`<div class="field"><label>Tipo / Descrição</label><input type="text" id="eq-tipo-${id}" placeholder="Ex: Bicicleta, Quadriciclo..." oninput="updateSummary()"></div>`:''}
-    <div class="field"><label>Prefixo / ID</label><input type="text" id="eq-prefix-${id}" placeholder="${meta.prefix}___" oninput="updateSummary()"></div>
-    <div class="field" style="flex:2"><label>Componentes</label><input type="text" id="eq-comp-${id}" placeholder="Nomes dos agentes" oninput="updateSummary()"></div>
-    <button class="btn-eq-rm" onclick="removeEquipeEntry(${id})" title="Remover">✕</button>`;
-  container.appendChild(div);
-  updateSummary();
+  div.className='viatura-row';div.id='viatura-row-'+(suffix||'main');
+  div.innerHTML=`<div class="fg fg-2">
+    ${acFieldHTML(ids.p,'veiculo','Prefixo da viatura/moto','Ex: VT-205, MT-180...')}
+    ${acFieldHTML(ids.c,'agentes','Componentes da equipe','Nomes dos agentes (separe por vírgula)')}
+  </div>${suffix?`<button type="button" class="btn-viatura-rm" onclick="removeViaturaExtra('${suffix}')">🗑️ Remover esta viatura</button>`:''}`;
+  return div;
 }
-function removeEquipeEntry(id){
-  equipeEntries=equipeEntries.filter(e=>e.id!==id);
-  const el=document.getElementById('eq-'+id);if(el)el.remove();
-  updateSummary();
+function addViaturaExtra(presetSuffix){
+  const suffix=(presetSuffix!=null)?presetSuffix:(++equipeExtraCtr);
+  if(presetSuffix!=null)equipeExtraCtr=Math.max(equipeExtraCtr,Number(presetSuffix)||0);
+  equipeExtraIds.push(suffix);
+  document.getElementById('viaturas-container').appendChild(renderViaturaRow(suffix));
+  updateSummary();markDirty();
+}
+function removeViaturaExtra(suffix){
+  equipeExtraIds=equipeExtraIds.filter(s=>String(s)!==String(suffix));
+  const el=document.getElementById('viatura-row-'+suffix);if(el)el.remove();
+  updateSummary();markDirty();
 }
 function getEquipeSummary(){
-  if(!equipeEntries.length)return'—';
-  return equipeEntries.map(e=>{
-    const meta=equipeTipos[e.tipo]||{label:e.tipo};
-    const tipoExtra=document.getElementById(`eq-tipo-${e.id}`);
-    const prefix=document.getElementById(`eq-prefix-${e.id}`);
-    const comp=document.getElementById(`eq-comp-${e.id}`);
-    const tipoStr=tipoExtra?tipoExtra.value.trim()||meta.label:meta.label;
-    const prefixStr=prefix?prefix.value.trim():'';
-    const compStr=comp?comp.value.trim():'';
-    let out=tipoStr;
-    if(prefixStr)out+=' '+prefixStr;
-    if(compStr)out+=' ('+compStr+')';
-    return out;
-  }).join(' | ');
-}
-
-// ── ÓRGÃOS ──
-const orgaosSel=new Set();
-function toggleOrgao(el,val){
-  if(orgaosSel.has(val)){orgaosSel.delete(val);el.classList.remove('selected');}
-  else{orgaosSel.add(val);el.classList.add('selected');}
-  updateSummary();
+  const rows=[{p:'viatura-prefixo',c:'equipe-componentes'},...equipeExtraIds.map(s=>viaturaFieldIds(s))];
+  const parts=rows.map(r=>{
+    const prefixo=gv(r.p),comp=gv(r.c);
+    let s=prefixo!=='—'?prefixo:'';
+    if(comp!=='—')s+=(s?' ':'')+'('+comp+')';
+    return s;
+  }).filter(Boolean);
+  return parts.length?parts.join(' | '):'—';
 }
 function getOrgaos(){
-  const arr=[...orgaosSel];
-  const outros=document.getElementById('orgaos-outros').value.trim();
-  if(outros)arr.push(...outros.split(',').map(s=>s.trim()).filter(Boolean));
-  return arr.length?arr.join(', '):'—';
+  const vt=gv('apoio-viatura'),comp=gv('apoio-componentes');
+  if(vt==='—'&&comp==='—')return'AMC';
+  let s='AMC, '+(vt!=='—'?vt:'');
+  if(comp!=='—')s+=(vt!=='—'?' ':'')+'('+comp+')';
+  return s;
+}
+
+// ── GEOLOCALIZAÇÃO RÁPIDA PARA CAMPO LOCAL ──
+function usarLocalizacao(iid,fid,btnEl){
+  if(!navigator.geolocation){showToast('⚠️ Geolocalização não suportada neste dispositivo.','red');return;}
+  showToast('📍 Obtendo localização...','blue');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude.toFixed(6),lng=pos.coords.longitude.toFixed(6);
+    const inp=document.getElementById(`f${iid}-${fid}`);
+    if(inp){
+      const coordStr=`(${lat}, ${lng})`;
+      if(!inp.value)inp.value=coordStr;
+      else if(!inp.value.includes('('))inp.value=inp.value+' '+coordStr;
+      updateSummary();markDirty();
+    }
+    showToast('✓ Localização adicionada.','blue');
+  },err=>{
+    let msg='⚠️ Não foi possível obter localização.';
+    if(err&&err.code===1)msg='⚠️ Permissão de localização negada. Ative nas configurações do navegador.';
+    else if(err&&err.code===2)msg='⚠️ Localização indisponível (GPS desligado ou sem sinal).';
+    else if(err&&err.code===3)msg='⚠️ Tempo esgotado buscando sinal de GPS. Tente novamente.';
+    showToast(msg,'red');
+  },{enableHighAccuracy:true,timeout:15000});
 }
 
 // ── SELECT OUTRO REVEAL ──
@@ -626,6 +798,7 @@ function getSelVal(selId,outroId){
 
 // ── FOTOS ──
 const fotosStore={};
+const photoSyncState={}; // key -> 'pending'|'syncing'|'done'|'error'
 function createFotoItem(key){
   const slotNum=parseInt(key.split('_')[1])+1;
   const wrap=document.createElement('div');
@@ -635,6 +808,7 @@ function createFotoItem(key){
     <div class="foto-preview" id="fprev-${key}">
       <span class="fp-icon">🖼️</span>
       <img id="fimg-${key}" src="" alt="">
+      <span class="fsync" id="fsync-${key}"></span>
       <button class="fdel" onclick="delFoto('${key}',event)">✕</button>
     </div>
     <div class="foto-btns">
@@ -651,7 +825,6 @@ function createFotoItem(key){
     </div>`;
   return wrap;
 }
-// ── COMPRESSÃO DE FOTO: redimensiona para max 1400px, qualidade 0.78 ──
 function comprimirFoto(dataUrl, callback){
   const img=new Image();
   img.onload=()=>{
@@ -673,52 +846,60 @@ function handleFoto(event,key){
   const r=new FileReader();
   r.onload=e=>{
     comprimirFoto(e.target.result, compressed=>{
-      // Verifica espaço disponível antes de salvar (avisa se localStorage estiver cheio)
       try{
         fotosStore[key]=compressed;
         saveFotosDraft('_preview_'+key, {[key]:compressed});
         localStorage.removeItem('amc_fotos__preview_'+key);
       }catch(err){
-        showToast('⚠️ Armazenamento cheio! Foto não salva no rascunho.','red');
+        showToast('⚠️ Armazenamento cheio! Foto não salva no rascunho local.','red');
       }
       const img=document.getElementById('fimg-'+key);img.src=compressed;
       document.getElementById('fprev-'+key).classList.add('has-img');
       event.target.value='';
+      refreshItemPreviews();
+      markDirty();
+      queuePhotoSync(key);
     });
   };
   r.readAsDataURL(file);
 }
 function delFoto(key,ev){
   ev.stopPropagation();ev.preventDefault();
-  delete fotosStore[key];
+  delete fotosStore[key];delete photoSyncState[key];
   const img=document.getElementById('fimg-'+key);if(img)img.src='';
   const prev=document.getElementById('fprev-'+key);if(prev){prev.classList.remove('has-img');prev.querySelectorAll('input[type=file]').forEach(i=>i.value='');}
+  refreshItemPreviews();markDirty();
 }
 function addFotoSlots(itemId,count,container){
   for(let i=0;i<count;i++)container.appendChild(createFotoItem(`${itemId}_${i}`));
+}
+function updateFotoSyncBadges(){
+  Object.keys(fotosStore).forEach(key=>{
+    const el=document.getElementById('fsync-'+key);if(!el)return;
+    const st=photoSyncState[key];
+    if(st==='done')el.textContent='☁️';
+    else if(st==='syncing')el.textContent='⏳';
+    else if(st==='error')el.textContent='⚠️';
+    else el.textContent='';
+  });
 }
 
 // ── ITEMS ──
 let items=[],itemCtr=0;
 const listMap={
   infracao:'list-fiscalizacao',suv:'list-fiscalizacao',nva:'list-fiscalizacao',
-  sinalizacao:'list-estrutura',buraco:'list-estrutura',poda:'list-estrutura',
-  infraestrutura:'list-estrutura',iluminacao:'list-estrutura',
-  educativa:'list-educacao',apoio:'list-educacao',
+  sinalizacao:'list-estrutura',infraestrutura:'list-estrutura',poda:'list-estrutura',iluminacao:'list-estrutura',
   abordagem:'list-outros',outros:'list-outros'
 };
-// ALL item types now support photos
+const tipoOrder=['infracao','suv','nva','sinalizacao','infraestrutura','poda','iluminacao','abordagem','outros'];
 const itemLabels={
   infracao:{label:'Infração de Trânsito',tag:'tag-infracao'},
   suv:{label:'SUV – Sem Utilização de Veículo',tag:'tag-suv'},
   nva:{label:'NVA – Veículo Abandonado',tag:'tag-nva'},
   sinalizacao:{label:'Ausência / Problema de Sinalização',tag:'tag-sinalizacao'},
-  buraco:{label:'Buraco / Problema de Pavimento',tag:'tag-infraestrutura'},
+  infraestrutura:{label:'Infraestrutura / Pavimento',tag:'tag-infraestrutura'},
   poda:{label:'Poda / Vegetação',tag:'tag-poda'},
-  infraestrutura:{label:'Infra Geral',tag:'tag-infraestrutura'},
   iluminacao:{label:'Iluminação Pública',tag:'tag-outros'},
-  educativa:{label:'Ação Educativa / Orientação',tag:'tag-educativa'},
-  apoio:{label:'Apoio a Órgão Parceiro',tag:'tag-nva'},
   abordagem:{label:'Abordagem / Ocorrência',tag:'tag-infracao'},
   outros:{label:'Outros Registros',tag:'tag-outros'}
 };
@@ -727,30 +908,37 @@ const C='CENTRAL AMC';
 function sf(id,iid,lbl,opts,span,outro){
   const sc=span===3?'s3':span===2?'s2':'';
   const oid=`f${iid}-${id}-o`;
-  const och=outro?`handleSelectOutro(this,'${oid}');updateSummary()`:'updateSummary()';
+  const och=outro?`handleSelectOutro(this,'${oid}');updateSummary();markDirty()`:'updateSummary();markDirty()';
   let h=`<div class="field ${sc}"><label>${lbl}</label><select id="f${iid}-${id}" onchange="${och}"><option value="">Selecione...</option>`;
   opts.forEach(o=>h+=`<option>${o}</option>`);
   h+='</select>';
-  if(outro)h+=`<input type="text" class="outro-reveal" id="${oid}" placeholder="Especifique..." oninput="updateSummary()">`;
+  if(outro)h+=`<input type="text" class="outro-reveal" id="${oid}" placeholder="Especifique..." oninput="forceUpper(this);updateSummary();markDirty()">`;
   h+='</div>';return h;
 }
 function tf(id,iid,lbl,pl,span){
   const sc=span===3?'s3':span===2?'s2':'';
-  return`<div class="field ${sc}"><label>${lbl}</label><input type="text" id="f${iid}-${id}" placeholder="${pl||''}" oninput="updateSummary()"></div>`;
+  return`<div class="field ${sc}"><label>${lbl}</label><input type="text" id="f${iid}-${id}" placeholder="${pl||''}" oninput="forceUpper(this);updateSummary();markDirty()"></div>`;
 }
-// ── CAMPO PLACA: máscara automática + validação visual ──
+function tf_local(id,iid,lbl,pl,span){
+  const sc=span===3?'s3':span===2?'s2':'';
+  return`<div class="field ${sc}"><label>${lbl}</label>
+    <div style="display:flex;gap:6px">
+    <input type="text" id="f${iid}-${id}" placeholder="${pl||''}" oninput="forceUpper(this);updateSummary();markDirty()" style="flex:1">
+    <button type="button" class="geo-btn" onclick="usarLocalizacao(${iid},'${id}',this)" title="Usar minha localização atual">📍</button>
+    </div></div>`;
+}
 function tf_placa(id,iid,lbl,pl){
   return`<div class="field"><label>${lbl}</label>
     <input type="text" id="f${iid}-${id}" placeholder="${pl||''}" maxlength="8"
       style="text-transform:uppercase;letter-spacing:2px;font-weight:700"
-      oninput="mascaraPlaca(this);updateSummary()"
+      oninput="mascaraPlaca(this);updateSummary();markDirty()"
       onblur="validarPlaca(this)">
     <span class="placa-hint" id="ph-${iid}-${id}" style="font-size:10px;color:#aaa;display:block;margin-top:2px"></span>
   </div>`;
 }
 function ta(id,iid,lbl,pl,span){
   const sc=span===3?'s3':span===2?'s2':'';
-  return`<div class="field ${sc}"><label>${lbl}</label><textarea id="f${iid}-${id}" placeholder="${pl||''}" oninput="updateSummary()"></textarea></div>`;
+  return`<div class="field ${sc}"><label>${lbl}</label><textarea id="f${iid}-${id}" placeholder="${pl||''}" oninput="forceUpper(this);updateSummary();markDirty()"></textarea></div>`;
 }
 
 function buildFields(tipo,iid){
@@ -760,64 +948,49 @@ function buildFields(tipo,iid){
       ${tf_placa('placa',iid,'Placa do veículo','ABC-1A23')}
       ${sf('tipov',iid,'Tipo de veículo',['Carro','Moto','Caminhão','Ônibus','Van/Utilitário','Outros'],1,true)}
       ${tf('auto',iid,'N° do Auto (AIT)','N° do AIT')}
-      ${tf('local',iid,'Local exato','Rua/Av. + n° ou referência',2)}
+      ${tf_local('local',iid,'Local exato','Rua/Av. + n° ou referência',2)}
       ${ta('obs',iid,'Observações','Detalhe a infração...',3)}</div>`;
     case'suv':return`<div class="fg fg-3">
       ${sf('tipo',iid,'Tipo de objeto',['Caçamba','Container','Entulho','Material de construção','Outros'],1,true)}
       ${tf('empresa',iid,'Empresa / responsável','Nome ou CNPJ')}
       ${tf('auto',iid,'N° Auto / Notificação','N° do auto')}
-      ${tf('local',iid,'Local exato','Endereço completo',2)}
+      ${tf_local('local',iid,'Local exato','Endereço completo',2)}
       ${sf('prov',iid,'Providência tomada',['Notificação','Apreensão','Remoção solicitada','Orientação','Aguardando remoção','Outros'],1,true)}
       ${ta('obs',iid,'Observações','Detalhe a situação...',3)}</div>`;
     case'nva':return`<div class="fg fg-3">
       ${tf_placa('placa',iid,'Placa (se visível)','ABC-1A23 ou ilegível')}
       ${sf('tipo',iid,'Tipo de veículo',['Carro','Moto','Caminhão','Ônibus','Bicicleta','Outros'],1,true)}
       ${tf('cor',iid,'Cor','Cor do veículo')}
-      ${tf('local',iid,'Local exato','Endereço completo',2)}
+      ${tf_local('local',iid,'Local exato','Endereço completo',2)}
       ${sf('estado',iid,'Estado',['Deteriorado / desmontado','Parcialmente desmontado','Aparentemente inteiro','Danificado por acidente'],1,false)}
       ${sf('notif',iid,'Notificação',['Sim','Não – aguardar identificação','Não – inacessível'],1,false)}
       ${ta('obs',iid,'Observações','Detalhe...',3)}</div>`;
     case'sinalizacao':return`<div class="fg fg-3">
       ${sf('tipo',iid,'Tipo de problema',['Placa ausente','Placa danificada','Faixa de pedestres apagada','Marcação PARE apagada','Sinalização de obras ausente','Semáforo com defeito','Outros'],1,true)}
-      ${tf('local',iid,'Local exato','Endereço ou cruzamento',2)}
+      ${tf_local('local',iid,'Local exato','Endereço ou cruzamento',2)}
       ${sf('urgencia',iid,'Urgência',['Alta – risco imediato','Média – necessita atenção','Baixa – programável'],1,false)}
       ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à '+C,'Comunicado à SEINF','Aguardando'],1,false)}
       ${ta('obs',iid,'Descrição','Descreva o problema...',3)}</div>`;
-    case'buraco':return`<div class="fg fg-3">
-      ${sf('tipo',iid,'Tipo',['Buraco isolado','Trecho danificado','Afundamento','Acúmulo de água','Sarjeta obstruída','Meio-fio danificado','Outros'],1,true)}
-      ${tf('local',iid,'Local exato','Endereço ou referência',2)}
-      ${tf('dim',iid,'Dimensão aprox.','Ex: 50x80cm')}
+    case'infraestrutura':return`<div class="fg fg-3">
+      ${sf('tipo',iid,'Tipo de problema',['Buraco isolado','Trecho danificado / afundamento','Acúmulo de água','Sarjeta obstruída','Drenagem comprometida','Meio-fio danificado','Guia rebaixada irregular','Calçada danificada','Lixo / descarte irregular na via','Lixo / entulho no passeio','Outros'],1,true)}
+      ${tf_local('local',iid,'Local exato','Endereço ou referência',2)}
+      ${tf('dim',iid,'Dimensão aprox.','Ex: 50x80cm (se aplicável)')}
       ${sf('risco',iid,'Risco ao trânsito',['Alto risco','Médio risco','Baixo risco'],1,false)}
-      ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à SEINF','Equipe tapa-buraco acionada','Sinalizado preventivamente','Comunicado à '+C,'Aguardando'],1,false)}
+      ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à SEINF','Comunicado à SEUMA','Equipe tapa-buraco acionada','Sinalizado preventivamente','Comunicado à '+C,'Aguardando'],1,false)}
       ${ta('obs',iid,'Observações','Descreva...',3)}</div>`;
     case'poda':return`<div class="fg fg-3">
       ${sf('tipo',iid,'Tipo de problema',['Galho obstruindo sinalização','Galho sobre fiação','Árvore caída','Vegetação obstruindo calçada','Capina necessária','Outros'],1,true)}
-      ${tf('local',iid,'Local exato','Endereço ou referência',2)}
+      ${tf_local('local',iid,'Local exato','Endereço ou referência',2)}
       ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à SEUMA','Comunicado à SCSP','Comunicado à '+C,'Aguardando'],1,false)}
-      ${ta('obs',iid,'Observações','Descreva...',3)}</div>`;
-    case'infraestrutura':return`<div class="fg fg-3">
-      ${sf('tipo',iid,'Tipo de problema',['Sarjeta obstruída','Drenagem comprometida','Meio-fio danificado','Guia rebaixada irregular','Calçada danificada','Outros'],1,true)}
-      ${tf('local',iid,'Local exato','Endereço ou referência',2)}
-      ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à SEINF','Comunicado à SCSP','Comunicado à '+C,'Aguardando'],1,false)}
       ${ta('obs',iid,'Observações','Descreva...',3)}</div>`;
     case'iluminacao':return`<div class="fg fg-3">
       ${sf('tipo',iid,'Problema',['Poste apagado','Luminária danificada','Cabo caído','Vários postes no trecho','Poste inclinado','Outros'],1,true)}
-      ${tf('local',iid,'Local / N° do poste','Endereço e n° do poste',2)}
+      ${tf_local('local',iid,'Local / N° do poste','Endereço e n° do poste',2)}
       ${sf('encam',iid,'Encaminhamento',['Solicitado via 156','Comunicado à Enel','Comunicado à '+C,'Aguardando'],1,false)}
       ${ta('obs',iid,'Observações','Detalhe...',3)}</div>`;
-    case'educativa':return`<div class="fg fg-3">
-      ${sf('tipo',iid,'Tipo de ação',['Orientação a pedestres','Orientação a ciclistas','Orientação a motoristas','Distribuição de material','Palestra / apresentação','Outros'],1,true)}
-      ${tf('local',iid,'Local','Endereço')}
-      ${tf('pub',iid,'Público atendido','N° aproximado de pessoas')}
-      ${sf('orgao',iid,'Órgão responsável',['AMC','AGEFIS','SEUMA','SME','Conjunto de órgãos','Outros'],1,true)}
-      ${ta('desc',iid,'Descrição','Detalhe a ação realizada...',3)}</div>`;
-    case'apoio':return`<div class="fg fg-3">
-      ${sf('orgao',iid,'Órgão parceiro',['AGEFIS','SEUMA','SCSP','SEINF','GMF','SEGOV','Outros'],1,true)}
-      ${tf('local',iid,'Local','Endereço',2)}
-      ${ta('desc',iid,'Descrição do apoio','Detalhe a ação conjunta...',3)}</div>`;
     case'abordagem':return`<div class="fg fg-3">
       ${sf('tipo',iid,'Tipo',['Abordagem de trânsito','Ocorrência de trânsito','Acidente','Conflito / desordem','Apoio a cidadão','Outros'],1,true)}
-      ${tf('local',iid,'Local','Endereço',2)}
+      ${tf_local('local',iid,'Local','Endereço',2)}
       ${ta('desc',iid,'Descrição','Relate o ocorrido, envolvidos, providências...',3)}</div>`;
     case'outros':return`<div class="fg fg-3">
       ${tf('titulo',iid,'Título / assunto','Resumo do registro',2)}
@@ -831,14 +1004,16 @@ const fieldDefs={
   suv:[['tipo','Tipo'],['empresa','Empresa'],['auto','Auto'],['local','Local'],['prov','Providência'],['obs','Obs.']],
   nva:[['placa','Placa'],['tipo','Tipo'],['cor','Cor'],['local','Local'],['estado','Estado'],['notif','Notificação'],['obs','Obs.']],
   sinalizacao:[['tipo','Tipo'],['local','Local'],['urgencia','Urgência'],['encam','Encaminhamento'],['obs','Descrição']],
-  buraco:[['tipo','Tipo'],['local','Local'],['dim','Dimensão'],['risco','Risco'],['encam','Encaminhamento'],['obs','Obs.']],
+  infraestrutura:[['tipo','Tipo'],['local','Local'],['dim','Dimensão'],['risco','Risco'],['encam','Encaminhamento'],['obs','Obs.']],
   poda:[['tipo','Tipo'],['local','Local'],['encam','Encaminhamento'],['obs','Obs.']],
-  infraestrutura:[['tipo','Tipo'],['local','Local'],['encam','Encaminhamento'],['obs','Obs.']],
   iluminacao:[['tipo','Problema'],['local','Local'],['encam','Encaminhamento'],['obs','Obs.']],
-  educativa:[['tipo','Tipo'],['local','Local'],['pub','Público'],['orgao','Órgão'],['desc','Descrição']],
-  apoio:[['orgao','Órgão'],['local','Local'],['desc','Descrição']],
   abordagem:[['tipo','Tipo'],['local','Local'],['desc','Descrição']],
   outros:[['titulo','Assunto'],['desc','Descrição']]
+};
+const groupLabels={
+  infracao:'Infrações de Trânsito',suv:'SUV – Sem Utilização',nva:'NVA – Veículo Abandonado',
+  sinalizacao:'Sinalização',infraestrutura:'Infraestrutura / Pavimento',poda:'Poda / Vegetação',iluminacao:'Iluminação',
+  abordagem:'Abordagem / Ocorrência',outros:'Outros Registros'
 };
 
 function getItemDetails(item){
@@ -852,15 +1027,26 @@ function getItemDetails(item){
     return val?{lbl,val}:null;
   }).filter(Boolean);
 }
+function getItemPreviewText(item){
+  const details=getItemDetails(item);
+  const localDet=details.find(d=>d.lbl==='Local');
+  if(localDet)return localDet.val;
+  return details.length?details[0].val:'sem detalhes';
+}
+function refreshItemPreviews(){
+  items.forEach(item=>{
+    const el=document.getElementById('item-preview-'+item.id);
+    if(el)el.textContent=getItemPreviewText(item);
+    const pc=document.getElementById('item-photocount-'+item.id);
+    if(pc){
+      const fc=[0,1].filter(s=>fotosStore[`${item.id}_${s}`]).length;
+      pc.textContent='📷 '+fc;
+    }
+  });
+}
 
 // ── CONTAGEM AUTOMÁTICA ──
-// Mapeia tipo de registro → qual contador atualizar automaticamente
-const tipoContador={
-  infracao:'cnt-aut',
-  suv:'cnt-suv',
-  nva:'cnt-nva'
-};
-// Marca quando usuário editou manualmente um contador
+const tipoContador={infracao:'cnt-aut',suv:'cnt-suv',nva:'cnt-nva'};
 const contadorManual={};
 document.addEventListener('DOMContentLoaded',()=>{
   ['cnt-aut','cnt-nva','cnt-suv','cnt-rem','cnt-ori'].forEach(id=>{
@@ -878,7 +1064,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   });
 });
-
 function recalcContadores(){
   const contagens={};
   items.forEach(item=>{
@@ -888,68 +1073,128 @@ function recalcContadores(){
   Object.entries(contagens).forEach(([cid,val])=>{
     if(!contadorManual[cid])document.getElementById(cid).value=val;
   });
-  // Zera contador se nao ha mais registros daquele tipo (e nao foi editado manualmente)
   Object.values(tipoContador).forEach(cid=>{
     if(!contagens[cid]&&!contadorManual[cid])document.getElementById(cid).value=0;
   });
 }
-
 function resetContadorManual(cid){
   delete contadorManual[cid];
   const inp=document.getElementById(cid);
   if(inp){const box=inp.closest('.counter-box');const tag=box&&box.querySelector('.cnt-manual-tag');if(tag)tag.remove();}
 }
-
-// Alias para compatibilidade com chamadas existentes
 function autoUpdateCounters(){recalcContadores();}
+
+// ── GRUPOS DE REGISTROS (agrupados por tipo, ignora ordem de criação) ──
+function ensureGroup(tipo){
+  const containerId=listMap[tipo];
+  const container=document.getElementById(containerId);
+  let group=document.getElementById('group-'+tipo);
+  if(!group){
+    group=document.createElement('div');
+    group.className='item-group';group.id='group-'+tipo;
+    group.innerHTML=`<div class="item-group-header"><span class="ig-label">${groupLabels[tipo]}</span><span class="ig-count" id="ig-count-${tipo}">0</span></div><div class="item-group-list" id="ig-list-${tipo}"></div>`;
+    // mantém ordem visual conforme tipoOrder
+    let inserted=false;
+    const myIdx=tipoOrder.indexOf(tipo);
+    for(const child of container.children){
+      const childIdx=tipoOrder.indexOf(child.id.replace('group-',''));
+      if(myIdx<childIdx){container.insertBefore(group,child);inserted=true;break;}
+    }
+    if(!inserted)container.appendChild(group);
+  }
+  return document.getElementById('ig-list-'+tipo);
+}
+function updateGroupCount(tipo){
+  const c=items.filter(i=>i.tipo===tipo).length;
+  const el=document.getElementById('ig-count-'+tipo);
+  if(el)el.textContent=c;
+  const group=document.getElementById('group-'+tipo);
+  if(group&&c===0)group.remove();
+  renumberGroup(tipo);
+  updateEmptyStates();
+}
+function renumberGroup(tipo){
+  const list=document.getElementById('ig-list-'+tipo);
+  if(!list)return;
+  [...list.children].forEach((div,idx)=>{
+    const numEl=div.querySelector('.item-num');
+    if(numEl)numEl.textContent=idx+1;
+  });
+}
+function updateEmptyStates(){
+  ['fiscalizacao','estrutura','outros'].forEach(key=>{
+    const listId='list-'+key;
+    const hasItems=document.getElementById(listId).children.length>0;
+    const empty=document.getElementById('empty-'+key);
+    if(empty)empty.style.display=hasItems?'none':'block';
+  });
+}
+
+function createItemElement(tipo,id){
+  const meta=itemLabels[tipo];
+  const div=document.createElement('div');
+  div.className='infracao-item';div.id='item-'+id;
+  div.innerHTML=`
+    <div class="item-header" onclick="toggleItemCard(${id})">
+      <div class="item-num">${id}</div>
+      <div class="item-tipo-wrap">
+        <span class="item-tipo">${meta.label}</span>
+        <span class="item-preview" id="item-preview-${id}">sem detalhes</span>
+      </div>
+      <span class="tipo-tag ${meta.tag}">${tipo.toUpperCase()}</span>
+      <span class="item-photo-count" id="item-photocount-${id}">📷 0</span>
+      <span class="item-chevron">▾</span>
+      <button class="btn-remove" onclick="event.stopPropagation();removeItem(${id})" title="Excluir registro">🗑️</button>
+    </div>
+    <div class="item-body">
+      ${buildFields(tipo,id)}
+      <div class="foto-section">
+        <span class="foto-label-title">📷 Registro fotográfico</span>
+        <div class="foto-grid" id="fotos-${id}"></div>
+      </div>
+    </div>`;
+  return div;
+}
+function toggleItemCard(id){
+  const el=document.getElementById('item-'+id);
+  if(el)el.classList.toggle('open');
+}
 
 function addItem(tipo){
   const meta=itemLabels[tipo];if(!meta)return;
   const id=++itemCtr;
   items.push({id,tipo});
-  const list=document.getElementById(listMap[tipo]);
-  const div=document.createElement('div');
-  div.className='infracao-item';div.id='item-'+id;
-  div.innerHTML=`
-    <div class="item-header">
-      <div class="item-num">${id}</div>
-      <div class="item-tipo">${meta.label}</div>
-      <span class="tipo-tag ${meta.tag}">${tipo.toUpperCase()}</span>
-      <button class="btn-remove" onclick="removeItem(${id})">✕</button>
-    </div>
-    ${buildFields(tipo,id)}
-    <div class="foto-section">
-      <span class="foto-label-title">📷 Registro fotográfico</span>
-      <div class="foto-grid" id="fotos-${id}"></div>
-    </div>`;
-  list.appendChild(div);
+  const div=createItemElement(tipo,id);
+  div.classList.add('open'); // novo item começa expandido para preenchimento
+  ensureGroup(tipo).appendChild(div);
   addFotoSlots(id,2,document.getElementById('fotos-'+id));
+  updateGroupCount(tipo);
   autoUpdateCounters();
   updateSummary();
+  refreshItemPreviews();
+  markDirty();
   setTimeout(()=>div.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
 }
-
 function removeItem(id){
+  const item=items.find(i=>i.id===id);
   items=items.filter(i=>i.id!==id);
-  [0,1].forEach(s=>delete fotosStore[`${id}_${s}`]);
+  [0,1].forEach(s=>{delete fotosStore[`${id}_${s}`];delete photoSyncState[`${id}_${s}`];});
   const el=document.getElementById('item-'+id);if(el)el.remove();
+  if(item)updateGroupCount(item.tipo);
   autoUpdateCounters();
   updateSummary();
+  markDirty();
 }
 
 // ── MÁSCARA E VALIDAÇÃO DE PLACA ──
 function mascaraPlaca(el){
   let v=el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  // Mercosul: ABC1D23 (7 chars sem hífen) | Antigo: ABC1234
-  if(v.length>3&&/^[A-Z]{3}/.test(v)){
-    v=v.substring(0,3)+'-'+v.substring(3,7);
-  }
+  if(v.length>3&&/^[A-Z]{3}/.test(v)){v=v.substring(0,3)+'-'+v.substring(3,7);}
   el.value=v;
 }
 function validarPlaca(el){
   const v=el.value.replace('-','');
-  const hint=document.getElementById('ph-'+el.id.replace('f','').replace('-placa','') + '-' + el.id.split('-').pop() + '-placa') || el.nextElementSibling;
-  // Aceita Mercosul (ABC1D23) ou antigo (ABC1234) ou "ilegível"
+  const hint=el.nextElementSibling;
   const mercosul=/^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(v);
   const antigo=/^[A-Z]{3}[0-9]{4}$/.test(v);
   const ilegivel=el.value.toLowerCase().includes('ileg');
@@ -968,9 +1213,7 @@ function validarHorario(){
   if(ini&&fim&&fim<=ini){
     fimEl.style.borderColor='#c0392b';
     showToast('⚠️ Hora de encerramento deve ser posterior ao início.','red');
-  }else{
-    fimEl.style.borderColor='';
-  }
+  }else{fimEl.style.borderColor='';}
 }
 
 // ── VALIDAÇÃO ANTES DE GERAR PDF ──
@@ -987,10 +1230,7 @@ function validarParaPDF(){
   if(!data)erros.push('Data da ocorrência');
   if(!turno)erros.push('Turno');
   if(ini&&fim&&fim<=ini)erros.push('Hora de encerramento deve ser posterior ao início');
-  if(erros.length){
-    showToast('⚠️ Preencha: '+erros.join(', '),'red');
-    return false;
-  }
+  if(erros.length){showToast('⚠️ Preencha: '+erros.join(', '),'red');return false;}
   return true;
 }
 
@@ -1015,19 +1255,13 @@ function updateSummary(){
   document.getElementById('status-bar').innerHTML=s;
 }
 
-// ── BUILD SUMMARY ──
+// ── BUILD SUMMARY (conteúdo dinâmico do modal de resumo, sem os totalizadores que já são fixos) ──
 function buildSummary(){
   const nome=gv('nome-agente'),mat=gv('matricula'),turno=gv('turno');
   const equipe=getEquipeSummary(),orgaos=getOrgaos();
   const data=gv('data-oc').replace(/(\d{4})-(\d{2})-(\d{2})/,'$3/$2/$1');
   const hini=gv('hora-ini'),hfim=gv('hora-fim'),corredor=getCorreedor();
-  const cA=document.getElementById('cnt-aut').value||'0';
-  const cN=document.getElementById('cnt-nva').value||'0';
-  const cS=document.getElementById('cnt-suv').value||'0';
-  const cR=document.getElementById('cnt-rem').value||'0';
-  const cO=document.getElementById('cnt-ori').value||'0';
 
-  const badge=(val,lbl,cor)=>`<div style="text-align:center;background:white;border:2px solid ${cor}30;border-radius:8px;padding:9px 8px;min-width:58px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:${cor}">${val}</div><div style="font-size:9px;font-weight:600;text-transform:uppercase;color:#888;margin-top:2px;line-height:1.2">${lbl}</div></div>`;
   const row=(l,vl)=>`<tr><td style="padding:4px 0;color:#888;width:36%;font-size:12px;vertical-align:top">${l}</td><td style="font-weight:600;font-size:12px">${vl}</td></tr>`;
 
   let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -1036,27 +1270,26 @@ function buildSummary(){
     <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:5px">Operação</div>
     <table style="width:100%;border-collapse:collapse">${row('Corredor',`<span style="color:var(--laranja)">${corredor}</span>`)}${row('Data',data)}${row('Período',hini+' – '+hfim)}</table></div>
   </div>
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:5px">Composição da Equipe</div>
-  <div style="background:#f9f6f2;border-radius:8px;padding:10px;font-size:12px;color:#333;margin-bottom:12px">${equipe}</div>
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:5px">Órgãos Presentes</div>
-  <div style="background:#f0f4fa;border-radius:8px;padding:10px;font-size:12px;color:var(--azul);font-weight:600;margin-bottom:14px">${orgaos}</div>
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:7px">Totalizadores</div>
-  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">${badge(cA,'Autuações','#E8520A')}${badge(cN,'NVA','#1B4F8A')}${badge(cS,'SUV','#B45309')}${badge(cR,'Remoções','#D32F2F')}${badge(cO,'Orientações','#2E7D1F')}</div>
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:5px">Viatura / Equipe</div>
+  <div style="background:#f9f6f2;border-radius:8px;padding:10px;font-size:12px;color:#333;margin-bottom:12px">${equipe} ${orgaos!=='AMC'?'· '+orgaos:''}</div>
   <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:7px">Registros Detalhados (${items.length})</div>`;
 
   if(!items.length)html+='<p style="color:#aaa;font-size:13px">Nenhum registro adicionado.</p>';
-  else items.forEach((item,idx)=>{
-    const meta=itemLabels[item.tipo];
-    const details=getItemDetails(item);
-    const fc=[0,1].filter(s=>fotosStore[`${item.id}_${s}`]).length;
-    html+=`<div style="border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid var(--laranja)">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap">
-        <span style="background:var(--laranja);color:white;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${idx+1}</span>
-        <span style="font-weight:700;font-size:13px;text-transform:uppercase">${meta.label}</span>
-        <span style="font-size:11px;color:#888;margin-left:6px">📷 ${fc} foto(s)</span>
-      </div>${details.map(d=>`<div style="margin:3px 0;font-size:12px"><span style="color:#888">${d.lbl}:</span> <strong>${d.val}</strong></div>`).join('')||'<span style="color:#aaa;font-size:12px">Sem detalhes.</span>'}
-    </div>`;
-  });
+  else{
+    const ordenados=[...items].sort((a,b)=>tipoOrder.indexOf(a.tipo)-tipoOrder.indexOf(b.tipo)||a.id-b.id);
+    ordenados.forEach((item,idx)=>{
+      const meta=itemLabels[item.tipo];
+      const details=getItemDetails(item);
+      const fc=[0,1].filter(s=>fotosStore[`${item.id}_${s}`]).length;
+      html+=`<div style="border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid var(--laranja)">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap">
+          <span style="background:var(--laranja);color:white;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${idx+1}</span>
+          <span style="font-weight:700;font-size:13px;text-transform:uppercase">${meta.label}</span>
+          <span style="font-size:11px;color:#888;margin-left:6px">📷 ${fc} foto(s)</span>
+        </div>${details.map(d=>`<div style="margin:3px 0;font-size:12px"><span style="color:#888">${d.lbl}:</span> <strong>${d.val}</strong></div>`).join('')||'<span style="color:#aaa;font-size:12px">Sem detalhes.</span>'}
+      </div>`;
+    });
+  }
 
   const obs=document.getElementById('obs-gerais').value;
   if(obs)html+=`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:5px">Observações Gerais</div><div style="background:#f9f6f2;border-radius:8px;padding:10px;font-size:13px;color:#333">${obs.replace(/\n/g,'<br>')}</div></div>`;
@@ -1064,52 +1297,120 @@ function buildSummary(){
 }
 
 // ══════════════════════════════════════
-// ── DRAFT SYSTEM ──
+// ── SINCRONIZAÇÃO (planilha + Drive) ──
+// Híbrido: tenta sincronizar logo após mudanças (debounce), com fila/retry se offline ou erro.
+// ══════════════════════════════════════
+let reportId=null;
+function ensureReportId(){
+  if(!reportId)reportId='r'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  return reportId;
+}
+let syncState={dirty:false,syncing:false,lastError:null};
+let syncTimer=null;
+function markDirty(){
+  syncState.dirty=true;
+  updateSyncBadge();
+  if(!CONFIG.SCRIPT_URL)return;
+  if(syncTimer)clearTimeout(syncTimer);
+  syncTimer=setTimeout(attemptSync,CONFIG.SYNC_DEBOUNCE_MS);
+}
+function buildSyncPayload(){
+  return{
+    reportId:ensureReportId(),
+    nome:gv('nome-agente'),matricula:gv('matricula'),turno:gv('turno'),
+    viaturaPrefixo:gv('viatura-prefixo'),equipeComponentes:gv('equipe-componentes'),
+    equipeExtra:equipeExtraIds.map(s=>{const ids=viaturaFieldIds(s);return{prefixo:gv(ids.p),componentes:gv(ids.c)};}),
+    equipeResumo:getEquipeSummary(),
+    apoioViatura:gv('apoio-viatura'),apoioComponentes:gv('apoio-componentes'),
+    corredor:getCorreedor(),programa:gv('programa-input'),
+    data:gv('data-oc'),horaIni:gv('hora-ini'),horaFim:gv('hora-fim'),
+    totais:{aut:document.getElementById('cnt-aut').value||'0',nva:document.getElementById('cnt-nva').value||'0',suv:document.getElementById('cnt-suv').value||'0',rem:document.getElementById('cnt-rem').value||'0',ori:document.getElementById('cnt-ori').value||'0'},
+    obsGerais:document.getElementById('obs-gerais').value||'',
+    items:items.map(item=>({id:item.id,tipo:item.tipo,campos:getItemDetails(item)})),
+    atualizadoEm:new Date().toISOString()
+  };
+}
+function attemptSync(){
+  if(!CONFIG.SCRIPT_URL){updateSyncBadge();return;}
+  if(syncState.syncing)return;
+  if(!navigator.onLine){updateSyncBadge();scheduleRetry();return;}
+  syncState.syncing=true;updateSyncBadge();
+  const payload=buildSyncPayload();
+  fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveReport',payload})})
+    .then(r=>r.json())
+    .then(res=>{
+      syncState.syncing=false;
+      if(res&&res.ok){syncState.dirty=false;syncState.lastError=null;syncPendingPhotos();}
+      else{syncState.lastError=(res&&res.error)||'Erro desconhecido';scheduleRetry();}
+      updateSyncBadge();
+    })
+    .catch(err=>{syncState.syncing=false;syncState.lastError=err.message;scheduleRetry();updateSyncBadge();});
+}
+function scheduleRetry(){if(syncTimer)clearTimeout(syncTimer);syncTimer=setTimeout(attemptSync,CONFIG.SYNC_RETRY_MS);}
+function updateSyncBadge(){
+  const b=document.getElementById('sync-badge');
+  if(!CONFIG.SCRIPT_URL){b.className='sync-badge off';b.textContent='⚙ Sincronização não configurada';return;}
+  if(!navigator.onLine){b.className='sync-badge error';b.textContent='📡 Sem conexão — aguardando';return;}
+  if(syncState.syncing){b.className='sync-badge syncing';b.textContent='⏳ Sincronizando...';return;}
+  if(syncState.lastError){b.className='sync-badge error';b.textContent='⚠️ Erro ao enviar — toque p/ tentar';return;}
+  if(syncState.dirty){b.className='sync-badge syncing';b.textContent='⏳ Alterações pendentes';return;}
+  b.className='sync-badge synced';b.textContent='☁️ Sincronizado';
+}
+function onSyncBadgeClick(){if(CONFIG.SCRIPT_URL)attemptSync();}
+
+function queuePhotoSync(key){
+  photoSyncState[key]='pending';
+  updateFotoSyncBadges();
+  if(!CONFIG.SCRIPT_URL)return;
+  syncOnePhoto(key);
+}
+function syncOnePhoto(key){
+  if(!CONFIG.SCRIPT_URL||!navigator.onLine||!fotosStore[key])return;
+  photoSyncState[key]='syncing';updateFotoSyncBadges();
+  const [itemId]=key.split('_');
+  fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'uploadPhoto',payload:{reportId:ensureReportId(),itemId,key,dataUrl:fotosStore[key]}})})
+    .then(r=>r.json())
+    .then(res=>{
+      photoSyncState[key]=(res&&res.ok)?'done':'error';
+      updateFotoSyncBadges();
+    })
+    .catch(()=>{photoSyncState[key]='error';updateFotoSyncBadges();});
+}
+function syncPendingPhotos(){
+  if(!CONFIG.SCRIPT_URL||!navigator.onLine)return;
+  Object.keys(fotosStore).forEach(key=>{
+    if(photoSyncState[key]!=='done')syncOnePhoto(key);
+  });
+}
+setInterval(()=>{if(CONFIG.SCRIPT_URL&&navigator.onLine)syncPendingPhotos();},CONFIG.SYNC_RETRY_MS);
+
+// ══════════════════════════════════════
+// ── DRAFT SYSTEM (backup local, funciona mesmo sem internet) ──
 // ══════════════════════════════════════
 const DRAFT_KEY='amc_drafts';
-const AUTOSAVE_KEY='amc_autosave';
-let _autosaveDraftId=null; // tracks the current session's autosave slot
+let _autosaveDraftId=null;
 
-function getDrafts(){
-  try{return JSON.parse(localStorage.getItem(DRAFT_KEY)||'[]');}catch(e){return[];}
-}
+function getDrafts(){try{return JSON.parse(localStorage.getItem(DRAFT_KEY)||'[]');}catch(e){return[];}}
 function saveDrafts(arr){
   try{localStorage.setItem(DRAFT_KEY,JSON.stringify(arr));}
   catch(e){showToast('⚠️ Armazenamento cheio! Exclua rascunhos antigos.','red');}
 }
-
-// Fotos are stored separately (large base64 data) to avoid corrupting the main drafts JSON
 function saveFotosDraft(draftId, fotosData){
   try{localStorage.setItem('amc_fotos_'+draftId, JSON.stringify(fotosData));}
   catch(e){
-    // Armazenamento cheio — avisa o usuário (não silencia mais)
     if(e.name==='QuotaExceededError'||e.code===22||e.code===1014){
-      showToast('⚠️ Armazenamento do navegador cheio! Fotos não salvas no rascunho. Os dados textuais foram salvos normalmente.','red');
+      showToast('⚠️ Armazenamento do navegador cheio! Fotos não salvas no rascunho local.','red');
     }
   }
 }
-function loadFotosDraft(draftId){
-  try{return JSON.parse(localStorage.getItem('amc_fotos_'+draftId)||'{}');}
-  catch(e){return{};}
-}
-function deleteFotosDraft(draftId){
-  try{localStorage.removeItem('amc_fotos_'+draftId);}catch(e){}
-}
+function loadFotosDraft(draftId){try{return JSON.parse(localStorage.getItem('amc_fotos_'+draftId)||'{}');}catch(e){return{};}}
+function deleteFotosDraft(draftId){try{localStorage.removeItem('amc_fotos_'+draftId);}catch(e){}}
 
 function captureState(){
-  // Capture all field values
   const formData={};
   document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{
     if(el.id && el.type!=='file')formData[el.id]=el.value;
   });
-  // Capture equipe entries DOM
-  const eqData=equipeEntries.map(e=>{
-    const tipoEl=document.getElementById(`eq-tipo-${e.id}`);
-    const prefEl=document.getElementById(`eq-prefix-${e.id}`);
-    const compEl=document.getElementById(`eq-comp-${e.id}`);
-    return{id:e.id,tipo:e.tipo,tipoVal:tipoEl?tipoEl.value:'',prefix:prefEl?prefEl.value:'',comp:compEl?compEl.value:''};
-  });
-  // Capture items with ALL field values (including outro fields)
   const itemsData=items.map(item=>{
     const fields={};
     (fieldDefs[item.tipo]||[]).forEach(([fid])=>{
@@ -1120,9 +1421,7 @@ function captureState(){
     });
     return{id:item.id,tipo:item.tipo,fields};
   });
-  // Capture orgaos
-  const orgaosData=[...orgaosSel];
-  return{formData,eqData,itemsData,orgaosData,eqCtr,itemCtr};
+  return{formData,itemsData,itemCtr,reportId,equipeExtraIds:[...equipeExtraIds]};
 }
 
 function salvarRascunho(silent){
@@ -1136,57 +1435,44 @@ function salvarRascunho(silent){
   drafts.unshift(draft);
   if(drafts.length>10)drafts.splice(10);
   saveDrafts(drafts);
-  // Save fotos separately to avoid corrupting main storage
   saveFotosDraft(draftId, fotosStore);
-  // Update badge
   const badge=document.getElementById('draft-badge');
   badge.classList.add('show','saved');
   badge.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   if(!silent)showToast('✓ Rascunho salvo com sucesso!');
+  attemptSync();
 }
 
-// Auto-save: updates one dedicated autosave slot instead of creating a new draft each time
 function _autoSave(){
   const nome=document.getElementById('nome-agente').value.trim();
-  if(!nome)return; // only autosave if user started filling
+  if(!nome)return;
   const state=captureState();
   const dataFmt=new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const corredor=getCorreedor();
   try{
     const drafts=getDrafts();
     if(_autosaveDraftId){
-      // Update existing autosave slot
       const idx=drafts.findIndex(d=>d.id===_autosaveDraftId);
       if(idx>=0){
         drafts[idx]={...drafts[idx],name:'[Auto] '+nome+' | '+corredor,savedAt:dataFmt,state};
-        saveDrafts(drafts);
-        saveFotosDraft(_autosaveDraftId, fotosStore);
+        saveDrafts(drafts);saveFotosDraft(_autosaveDraftId, fotosStore);
+        const badge=document.getElementById('draft-badge');badge.classList.add('show','saved');
+        badge.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         return;
       }
     }
-    // Create new autosave slot
     _autosaveDraftId=Date.now();
     const draft={id:_autosaveDraftId,name:'[Auto] '+nome+' | '+corredor,savedAt:dataFmt,state,isAutosave:true};
     drafts.unshift(draft);
     if(drafts.length>10)drafts.splice(10);
-    saveDrafts(drafts);
-    saveFotosDraft(_autosaveDraftId, fotosStore);
+    saveDrafts(drafts);saveFotosDraft(_autosaveDraftId, fotosStore);
   }catch(e){}
-  // Update badge silently
   const badge=document.getElementById('draft-badge');
   badge.classList.add('show','saved');
   badge.textContent='✓ Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
-
-// Auto-save every 30 seconds (was 2 min - too slow for mobile users)
 setInterval(_autoSave, 30000);
-
-// Also save on visibility change (user switches app on mobile)
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)_autoSave();
-});
-
-// Save before page unload
+document.addEventListener('visibilitychange',()=>{if(document.hidden){_autoSave();attemptSync();}});
 window.addEventListener('beforeunload',()=>{_autoSave();});
 
 function checkAutoSave(){
@@ -1215,110 +1501,57 @@ function abrirModal(type){
         </div>`).join('')+'</div>';
     }
     document.getElementById('modal-load').classList.add('show');
+  }else if(type==='resumo'){
+    buildSummary();
+    document.getElementById('modal-resumo').classList.add('show');
   }
 }
-function fecharModal(type){
-  document.getElementById('modal-'+type).classList.remove('show');
-}
+function fecharModal(type){document.getElementById('modal-'+type).classList.remove('show');}
 
 function carregarRascunho(id){
   const drafts=getDrafts();
   const draft=drafts.find(d=>d.id===id);
   if(!draft)return;
   fecharModal('load');
-  // Load fotos from separate storage
   const fotosData=loadFotosDraft(id);
   restoreState(draft.state, fotosData);
-  _autosaveDraftId=id; // future autosaves will update this slot
+  _autosaveDraftId=id;
   showToast('✓ Rascunho carregado: '+draft.name.replace(/^\[Auto\] /,''),'blue');
 }
-
 function deletarRascunho(ev,id){
   ev.stopPropagation();
   const drafts=getDrafts().filter(d=>d.id!==id);
   saveDrafts(drafts);
   deleteFotosDraft(id);
   if(_autosaveDraftId===id)_autosaveDraftId=null;
-  abrirModal('load');// refresh
+  abrirModal('load');
 }
 
 function restoreState(state, fotosData){
-  // Clear current state
   hardReset(false);
-
-  // Restore counters
-  eqCtr=state.eqCtr||0;
   itemCtr=state.itemCtr||0;
+  reportId=state.reportId||null;
 
-  // Restore equipe entries synchronously
-  (state.eqData||[]).forEach(e=>{
-    equipeEntries.push({id:e.id,tipo:e.tipo});
-    const meta=equipeTipos[e.tipo]||{label:e.tipo,icon:'➕',prefix:''};
-    const container=document.getElementById('equipe-entries');
-    const div=document.createElement('div');
-    div.className='equipe-entry';div.id='eq-'+e.id;
-    div.innerHTML=`
-      <span class="eq-tipo">${meta.icon} ${meta.label}</span>
-      ${e.tipo==='OUTRO'?`<div class="field"><label>Tipo / Descrição</label><input type="text" id="eq-tipo-${e.id}" placeholder="Ex: Bicicleta..." oninput="updateSummary()"></div>`:''}
-      <div class="field"><label>Prefixo / ID</label><input type="text" id="eq-prefix-${e.id}" placeholder="${meta.prefix}___" oninput="updateSummary()"></div>
-      <div class="field" style="flex:2"><label>Componentes</label><input type="text" id="eq-comp-${e.id}" placeholder="Nomes dos agentes" oninput="updateSummary()"></div>
-      <button class="btn-eq-rm" onclick="removeEquipeEntry(${e.id})" title="Remover">✕</button>`;
-    container.appendChild(div);
-    // Set equipe field values immediately (elements just created)
-    const ti=document.getElementById(`eq-tipo-${e.id}`);if(ti)ti.value=e.tipoVal||'';
-    const pi=document.getElementById(`eq-prefix-${e.id}`);if(pi)pi.value=e.prefix||'';
-    const ci=document.getElementById(`eq-comp-${e.id}`);if(ci)ci.value=e.comp||'';
-  });
+  (state.equipeExtraIds||[]).forEach(suffix=>addViaturaExtra(suffix));
 
-  // Restore orgaos
-  (state.orgaosData||[]).forEach(o=>{
-    orgaosSel.add(o);
-    document.querySelectorAll('.orgao-chip').forEach(chip=>{
-      if(chip.getAttribute('onclick')&&chip.getAttribute('onclick').includes(`'${o}'`))chip.classList.add('selected');
+  (state.itemsData||[]).forEach(itemData=>{
+    const meta=itemLabels[itemData.tipo];if(!meta)return;
+    items.push({id:itemData.id,tipo:itemData.tipo});
+    const div=createItemElement(itemData.tipo,itemData.id);
+    ensureGroup(itemData.tipo).appendChild(div);
+    addFotoSlots(itemData.id,2,document.getElementById('fotos-'+itemData.id));
+    Object.entries(itemData.fields||{}).forEach(([fid,val])=>{
+      const el=document.getElementById(`f${itemData.id}-${fid}`);
+      if(el){el.value=val;if(fid.endsWith('-o')&&val)el.classList.add('show');}
     });
+    updateGroupCount(itemData.tipo);
   });
 
-  // Restore items and their fields synchronously
-  (state.itemsData||[]).forEach(item=>{
-    const meta=itemLabels[item.tipo];if(!meta)return;
-    items.push({id:item.id,tipo:item.tipo});
-    const list=document.getElementById(listMap[item.tipo]);
-    const div=document.createElement('div');
-    div.className='infracao-item';div.id='item-'+item.id;
-    div.innerHTML=`
-      <div class="item-header">
-        <div class="item-num">${item.id}</div>
-        <div class="item-tipo">${meta.label}</div>
-        <span class="tipo-tag ${meta.tag}">${item.tipo.toUpperCase()}</span>
-        <button class="btn-remove" onclick="removeItem(${item.id})">✕</button>
-      </div>
-      ${buildFields(item.tipo,item.id)}
-      <div class="foto-section">
-        <span class="foto-label-title">📷 Registro fotográfico</span>
-        <div class="foto-grid" id="fotos-${item.id}"></div>
-      </div>`;
-    list.appendChild(div);
-    addFotoSlots(item.id,2,document.getElementById('fotos-'+item.id));
-    // Restore field values immediately
-    Object.entries(item.fields||{}).forEach(([fid,val])=>{
-      const el=document.getElementById(`f${item.id}-${fid}`);
-      if(el){
-        el.value=val;
-        // If this is an "outro" field, show it if it has value
-        if(fid.endsWith('-o')&&val){
-          el.classList.add('show');
-        }
-      }
-    });
-  });
-
-  // Restore main form fields (data, hora, nome, etc.)
   Object.entries(state.formData||{}).forEach(([id,val])=>{
     const el=document.getElementById(id);
     if(el && el.type!=='file')el.value=val;
   });
 
-  // Restore fotos from separately stored data
   const fotosToRestore=fotosData||{};
   Object.entries(fotosToRestore).forEach(([key,data])=>{
     fotosStore[key]=data;
@@ -1326,13 +1559,12 @@ function restoreState(state, fotosData){
     const prev=document.getElementById('fprev-'+key);if(prev)prev.classList.add('has-img');
   });
 
-  onCorredorChange();
   autoUpdateCounters();
   updateSummary();
+  refreshItemPreviews();
 }
 
 function confirmarLimpar(){
-  // Verifica se há dados preenchidos não salvos
   const nome=document.getElementById('nome-agente').value.trim();
   const badge=document.getElementById('draft-badge');
   const temDados=nome||items.length>0;
@@ -1352,18 +1584,19 @@ function confirmarLimpar(){
 
 function hardReset(showMsg){
   document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{if(el.type!=='file')el.value='';});
-  items=[];itemCtr=0;equipeEntries=[];eqCtr=0;
+  items=[];itemCtr=0;
   Object.keys(fotosStore).forEach(k=>delete fotosStore[k]);
-  orgaosSel.clear();
-  document.querySelectorAll('.orgao-chip').forEach(o=>o.classList.remove('selected'));
-  ['list-fiscalizacao','list-estrutura','list-educacao','list-outros'].forEach(id=>{
+  Object.keys(photoSyncState).forEach(k=>delete photoSyncState[k]);
+  ['list-fiscalizacao','list-estrutura','list-outros'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML='';
   });
-  document.getElementById('equipe-entries').innerHTML='';
-  document.getElementById('corredor-outro').style.display='none';
-  // Resetar flags de edição manual dos contadores
+  updateEmptyStates();
+  equipeExtraIds=[];equipeExtraCtr=0;
+  const vc=document.getElementById('viaturas-container');
+  if(vc){vc.innerHTML='';vc.appendChild(renderViaturaRow(null));}
   ['cnt-aut','cnt-nva','cnt-suv','cnt-rem','cnt-ori'].forEach(cid=>resetContadorManual(cid));
   const badge=document.getElementById('draft-badge');badge.classList.remove('show','saved');
+  reportId=null;syncState={dirty:false,syncing:false,lastError:null};updateSyncBadge();
   const n=new Date();
   document.getElementById('data-oc').value=n.toISOString().slice(0,10);
   document.getElementById('hora-ini').value=pad(n.getHours())+':'+pad(n.getMinutes());
@@ -1373,7 +1606,6 @@ function hardReset(showMsg){
 }
 
 // ── PDF ──
-// ── CORREÇÃO: calcula dimensões reais da imagem mantendo proporção ──
 function calcImgDims(dataUrl, maxW, maxH){
   return new Promise(resolve=>{
     const img=new Image();
@@ -1397,7 +1629,6 @@ async function gerarPDF(){
   const doc=new jsPDF('p','mm','a4');
   const W=210,M=13;let y=0;
 
-  // ── CABEÇALHO ──
   doc.setFillColor(232,82,10);doc.rect(0,0,W,22,'F');
   doc.setFillColor(26,26,26);doc.rect(0,0,52,22,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(232,82,10);doc.text('AMC',6,15);
@@ -1408,9 +1639,8 @@ async function gerarPDF(){
   doc.text('REGISTRO DE AÇÕES EM CAMPO',57,15);
   y=28;
 
-  // ── BARRA CORREDOR ──
   const corredor=getCorreedor();
-  const dataFmt=document.getElementById('data-oc').value.split('-').reverse().join('/');
+  const dataFmt=(document.getElementById('data-oc').value||'').split('-').reverse().join('/');
   const hini=document.getElementById('hora-ini').value||'—';
   const hfim=document.getElementById('hora-fim').value||'—';
   doc.setFillColor(91,184,42);doc.roundedRect(M,y,W-2*M,8,1.5,1.5,'F');
@@ -1419,29 +1649,25 @@ async function gerarPDF(){
   doc.text('DATA: '+dataFmt+'   '+hini+' – '+hfim,W-M-70,y+5.5);
   y+=13;
 
-  // ── BLOCO DE IDENTIFICAÇÃO ──
   const nome=gv('nome-agente'),mat=gv('matricula'),turno=gv('turno');
   const equipe=getEquipeSummary(),orgaos=getOrgaos();
-  // Calcula altura dinâmica do bloco de ID
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   const eqLines=doc.splitTextToSize(equipe,W-2*M-52-6);
   const ogLines=doc.splitTextToSize(orgaos,W-2*M-52-6);
-  const rh=7; // espaçamento entre linhas (era 6)
-  const idBlockH=Math.max(42, 14 + Math.max(3,(eqLines.length+ogLines.length+1))*rh + 4);
+  const rh=7;
+  const idBlockH=Math.max(36, 14 + Math.max(3,(eqLines.length+ogLines.length+1))*rh + 4);
   doc.setDrawColor(220,220,215);doc.setFillColor(255,252,248);
   doc.roundedRect(M,y,W-2*M,idBlockH,2,2,'FD');
   doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(232,82,10);
   doc.text('IDENTIFICAÇÃO E EQUIPE',M+3,y+6);
   const c1=M+4,c2=M+54;let ry=y+14;
-  // Coluna esquerda
   [['Coordenador:',nome],['Matrícula:',mat],['Turno:',turno]].forEach(([l,v])=>{
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text(l,c1,ry);
     doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
     doc.text(String(v).substring(0,28),c1+24,ry);ry+=rh;
   });
-  // Coluna direita
   let ry2=y+14;
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Equipe:',c2,ry2);
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Viatura:',c2,ry2);
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,30,30);
   doc.text(eqLines,c2+22,ry2);ry2+=Math.max(rh,eqLines.length*rh);
   doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Órgãos:',c2,ry2);
@@ -1449,7 +1675,6 @@ async function gerarPDF(){
   doc.text(ogLines,c2+22,ry2);
   y+=idBlockH+4;
 
-  // ── TOTALIZADORES ──
   const ctrs=[['cnt-aut','Autuações',[232,82,10]],['cnt-nva','NVA',[27,79,138]],['cnt-suv','SUV',[180,110,10]],['cnt-rem','Remoções',[180,30,30]],['cnt-ori','Orientações',[46,125,31]]];
   const bw=(W-2*M-8)/5;
   ctrs.forEach(([id,lbl,rgb],i)=>{
@@ -1463,21 +1688,27 @@ async function gerarPDF(){
   });
   y+=21;
 
-  // ── REGISTROS DETALHADOS ──
+  const itemsOrdenados=[...items].sort((a,b)=>tipoOrder.indexOf(a.tipo)-tipoOrder.indexOf(b.tipo)||a.id-b.id);
   doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(232,82,10);
-  doc.text('REGISTROS DETALHADOS ('+items.length+')',M,y);y+=3;
+  doc.text('REGISTROS DETALHADOS ('+itemsOrdenados.length+')',M,y);y+=3;
   doc.setDrawColor(232,82,10);doc.setLineWidth(0.4);doc.line(M,y,W-M,y);y+=6;
 
-  for(let idx=0;idx<items.length;idx++){
-    const item=items[idx];const meta=itemLabels[item.tipo];
+  let lastTipo=null;
+  for(let idx=0;idx<itemsOrdenados.length;idx++){
+    const item=itemsOrdenados[idx];const meta=itemLabels[item.tipo];
     if(y>255){doc.addPage();y=15;}
 
-    // Cabeçalho do registro (fundo laranja claro)
+    if(item.tipo!==lastTipo){
+      lastTipo=item.tipo;
+      const count=itemsOrdenados.filter(i=>i.tipo===item.tipo).length;
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(150,150,150);
+      doc.text(groupLabels[item.tipo].toUpperCase()+' ('+count+')',M+1,y);y+=4.5;
+    }
+
     doc.setFillColor(250,247,243);doc.roundedRect(M,y,W-2*M,7.5,1.5,1.5,'F');
     doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(232,82,10);
     doc.text(`${idx+1}. ${meta.label.toUpperCase()}`,M+4,y+5.3);y+=10;
 
-    // Campos do registro
     getItemDetails(item).forEach(d=>{
       if(y>265){doc.addPage();y=15;}
       doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(140,140,140);
@@ -1487,39 +1718,30 @@ async function gerarPDF(){
       doc.text(lines,M+46,y);y+=Math.max(6,lines.length*5.5);
     });
 
-    // ── FOTOS com proporção correta ──
     const fkeys=[0,1].map(s=>`${item.id}_${s}`).filter(k=>fotosStore[k]);
     if(fkeys.length){
       if(y>240){doc.addPage();y=15;}
       doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(140,140,140);
       doc.text('Fotos:',M+5,y);y+=5;
 
-      const maxFotoW=80; // largura máxima por foto (mm) — era 40
-      const maxFotoH=60; // altura máxima por foto (mm) — era 30
-      const gap=5;
-
+      const maxFotoW=80,maxFotoH=60,gap=5;
       for(let fi=0;fi<fkeys.length;fi++){
         const k=fkeys[fi];
         try{
-          // Detecta proporção real da imagem
           const dims=await calcImgDims(fotosStore[k],maxFotoW,maxFotoH);
-          // Distribui lado a lado ou quebra de linha se não couber
           const xFoto=M+5+fi*(maxFotoW+gap);
           if(y+dims.h>278){doc.addPage();y=15;}
           doc.addImage(fotosStore[k],'JPEG',xFoto,y,dims.w,dims.h);
-          // Borda leve ao redor da foto
           doc.setDrawColor(200,195,190);doc.setLineWidth(0.2);
           doc.rect(xFoto,y,dims.w,dims.h);
           if(fi===fkeys.length-1)y+=dims.h+4;
-        }catch(e){/* foto inválida, pula */}
+        }catch(e){}
       }
     }
 
-    // Separador entre registros
     doc.setDrawColor(225,220,215);doc.setLineWidth(0.2);doc.line(M,y,W-M,y);y+=5;
   }
 
-  // ── OBSERVAÇÕES GERAIS ──
   const obs=document.getElementById('obs-gerais').value;
   if(obs){
     if(y>240){doc.addPage();y=15;}
@@ -1529,17 +1751,6 @@ async function gerarPDF(){
     const ol=doc.splitTextToSize(obs,W-2*M);doc.text(ol,M,y);y+=ol.length*5.5+6;
   }
 
-  // ── OBSERVAÇÃO FINAL ──
-  const obsf=document.getElementById('obs-final').value;
-  if(obsf){
-    if(y>240){doc.addPage();y=15;}
-    doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(232,82,10);
-    doc.text('OBSERVAÇÃO FINAL',M,y);y+=5;
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(50,50,50);
-    const ol=doc.splitTextToSize(obsf,W-2*M);doc.text(ol,M,y);y+=ol.length*5.5+6;
-  }
-
-  // ── RODAPÉ DE ASSINATURA ──
   if(y>252){doc.addPage();y=15;}y+=5;
   doc.setDrawColor(180,180,180);doc.setLineWidth(0.3);
   doc.line(M,y,M+75,y);
@@ -1552,22 +1763,23 @@ async function gerarPDF(){
   doc.setFontSize(8.5);doc.setTextColor(30,30,30);
   doc.text(`${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`,W-M-75,y+9);
 
-  // ── RODAPÉ DE PÁGINAS ──
   const pgs=doc.internal.getNumberOfPages();
   for(let i=1;i<=pgs;i++){
     doc.setPage(i);
     doc.setFillColor(26,26,26);doc.rect(0,287,210,10,'F');
     doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(180,180,180);
-    doc.text('AMC – Autarquia Municipal de Trânsito de Fortaleza | Capital Limpa & Ordenada',M,293);
+    doc.text('AMC – Autarquia Municipal de Trânsito de Fortaleza',M,293);
     doc.text(`Página ${i} de ${pgs}`,W-M,293,{align:'right'});
   }
 
   const fn=`AMC_Campo_${nome.replace(/\s+/g,'_')}_${(document.getElementById('data-oc').value||'').replace(/-/g,'')}.pdf`;
   doc.save(fn);
   showToast('✓ PDF gerado com sucesso!');
+  attemptSync();
   }catch(e){showToast('❌ Erro ao gerar PDF: '+e.message,'red');}finally{setPDFBtnState(false);}
 }
 
+updateEmptyStates();
 updateSummary();
 </script>
 </body>
