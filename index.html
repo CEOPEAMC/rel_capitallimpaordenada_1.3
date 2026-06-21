@@ -762,15 +762,16 @@ function usarLocalizacao(iid,fid,btnEl){
   if(!navigator.geolocation){showToast('⚠️ Geolocalização não suportada neste dispositivo.','red');return;}
   showToast('📍 Obtendo localização...','blue');
   navigator.geolocation.getCurrentPosition(pos=>{
-    const lat=pos.coords.latitude.toFixed(6),lng=pos.coords.longitude.toFixed(6);
-    const inp=document.getElementById(`f${iid}-${fid}`);
-    if(inp){
-      const coordStr=`(${lat}, ${lng})`;
-      if(!inp.value)inp.value=coordStr;
-      else if(!inp.value.includes('('))inp.value=inp.value+' '+coordStr;
-      updateSummary();markDirty();
-    }
-    showToast('✓ Localização adicionada.','blue');
+    const lat=pos.coords.latitude,lng=pos.coords.longitude;
+    showToast('📍 Buscando endereço...','blue');
+    buscarEndereco(lat,lng).then(endereco=>{
+      preencherLocalCampo(iid,fid,endereco);
+      showToast('✓ Endereço adicionado.','blue');
+    }).catch(()=>{
+      const coordStr=`(${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+      preencherLocalCampo(iid,fid,coordStr);
+      showToast('⚠️ Endereço não encontrado, usando coordenadas.','orange');
+    });
   },err=>{
     let msg='⚠️ Não foi possível obter localização.';
     if(err&&err.code===1)msg='⚠️ Permissão de localização negada. Ative nas configurações do navegador.';
@@ -778,6 +779,35 @@ function usarLocalizacao(iid,fid,btnEl){
     else if(err&&err.code===3)msg='⚠️ Tempo esgotado buscando sinal de GPS. Tente novamente.';
     showToast(msg,'red');
   },{enableHighAccuracy:true,timeout:15000});
+}
+function preencherLocalCampo(iid,fid,texto){
+  const inp=document.getElementById(`f${iid}-${fid}`);
+  if(!inp)return;
+  inp.value=inp.value?inp.value+' '+texto:texto;
+  forceUpper(inp);
+  updateSummary();markDirty();
+}
+// Geocodificação reversa via OpenStreetMap Nominatim (gratuito, sem chave de API; uso pontual via botão, dentro da política de uso razoável do serviço)
+async function buscarEndereco(lat,lng){
+  const url=`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`;
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),8000);
+  let res;
+  try{
+    res=await fetch(url,{signal:controller.signal,headers:{'Accept':'application/json'}});
+  }finally{clearTimeout(timeoutId);}
+  if(!res.ok)throw new Error('geocoding failed');
+  const data=await res.json();
+  const a=data.address||{};
+  const rua=a.road||a.pedestrian||a.footway||a.cycleway||'';
+  const numero=a.house_number||'';
+  const bairro=a.suburb||a.neighbourhood||a.city_district||'';
+  const partes=[];
+  if(rua)partes.push(rua+(numero?', '+numero:''));
+  if(bairro)partes.push(bairro);
+  if(partes.length)return partes.join(' - ');
+  if(data.display_name)return data.display_name.split(',').slice(0,3).join(',').trim();
+  throw new Error('sem endereço');
 }
 
 // ── SELECT OUTRO REVEAL ──
