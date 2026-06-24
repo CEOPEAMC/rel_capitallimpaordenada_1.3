@@ -1364,6 +1364,9 @@ function attemptSync(){
   if(!CONFIG.SCRIPT_URL){updateSyncBadge();return;}
   if(syncState.syncing)return;
   if(!navigator.onLine){updateSyncBadge();scheduleRetry();return;}
+  // Não sincroniza se o nome do coordenador ainda não foi preenchido (evita linhas vazias na planilha)
+  const nome=document.getElementById('nome-agente').value.trim();
+  if(!nome){syncState.dirty=false;updateSyncBadge();return;}
   syncState.syncing=true;updateSyncBadge();
   const payload=buildSyncPayload();
   fetch(CONFIG.SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveReport',payload})})
